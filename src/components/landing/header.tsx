@@ -35,7 +35,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-primary-foreground/20 bg-primary text-primary-foreground">
       <div className="container flex h-16 max-w-7xl items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <Logo className="h-10 text-primary-foreground" />
+          <Logo className="h-12 text-primary-foreground" />
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
