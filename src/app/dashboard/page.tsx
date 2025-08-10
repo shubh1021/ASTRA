@@ -68,13 +68,10 @@ export default function DashboardPage() {
 
     try {
       const analysisPromise = analyzeLegalClauses({ documentText: text });
-      const redactionPromise = redactSensitiveData({ documentText: text });
-
-      const analysis = await analysisPromise;
-      setAnalysisResult(analysis);
+      setAnalysisResult(await analysisPromise);
       
-      const redaction = await redactionPromise;
-      setRedactionResult(redaction);
+      const redactionPromise = redactSensitiveData({ documentText: text });
+      setRedactionResult(await redactionPromise);
 
     } catch (e) {
       setError('An error occurred during analysis. Please try again.');
@@ -107,7 +104,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-screen bg-secondary/30 text-foreground">
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         <header className="flex items-center justify-between p-4 border-b border-border bg-background">
           <div className="flex items-center gap-4">
             <Link href="/jurisdiction">
@@ -119,9 +116,9 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <main className="flex-1 grid md:grid-cols-3 gap-1 overflow-hidden">
+        <main className="flex-1 grid md:grid-cols-3 gap-1 min-h-0">
           {/* Document Viewer */}
-          <div className="md:col-span-2 flex flex-col bg-background p-4" {...getRootProps()}>
+          <div className="md:col-span-2 flex flex-col bg-background p-4 min-h-0" {...getRootProps()}>
             <input {...getInputProps()} />
              <div className="flex items-center justify-between p-2 border-b border-border">
                 <div className="flex items-center gap-2 text-sm font-medium">
@@ -143,7 +140,7 @@ export default function DashboardPage() {
                     <Button variant="outline" size="sm" onClick={open}><Upload className="mr-2 h-4 w-4" /> New Document</Button>
                 </div>
             </div>
-            <CardContent className="flex-1 p-2 mt-2 overflow-hidden">
+            <CardContent className="flex-1 p-2 mt-2 min-h-0">
               <ScrollArea className="h-full">
                 <div className={cn("h-full w-full rounded-lg border bg-background", isDragActive && "border-primary")}>
                   {documentText ? (
@@ -165,7 +162,7 @@ export default function DashboardPage() {
           
           {/* AI Tools Panel */}
           <aside className="md:col-span-1 flex flex-col bg-background border-l border-border">
-             <ScrollArea className="flex-1">
+             <ScrollArea className="flex-grow">
                 <div className="p-4">
                     <h2 className="text-lg font-semibold mb-4">Document Tools</h2>
                     <Accordion type="multiple" className="w-full space-y-3" defaultValue={["analysis", "redaction", "deepsearch"]}>
@@ -251,7 +248,7 @@ export default function DashboardPage() {
                     </Accordion>
                 </div>
             </ScrollArea>
-            <div className="p-4 border-t border-border">
+            <div className="p-4 border-t border-border mt-auto">
                 <h3 className="text-base font-semibold mb-2 flex items-center gap-2"><Bot className="h-5 w-5" /> Document Assistant</h3>
                 <Card className="bg-secondary/30 p-3">
                     <div className="bg-background/50 p-2 rounded-md text-sm text-muted-foreground">
