@@ -20,7 +20,7 @@ export default function Header() {
     <Link href={href} passHref>
       <span
         className={cn(
-          "text-sm font-medium text-foreground/80 transition-colors hover:text-foreground",
+          "text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
           className
         )}
         onClick={() => setIsMenuOpen(false)}
@@ -35,7 +35,7 @@ export default function Header() {
       <div className="container flex h-16 max-w-7xl items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <Scale className="h-6 w-6 text-primary" />
-          <span className="font-headline text-xl font-bold text-foreground">
+          <span className="text-xl font-bold text-foreground">
             LexAI
           </span>
         </Link>
@@ -48,9 +48,9 @@ export default function Header() {
 
         <div className="hidden items-center gap-2 md:flex">
           <Button variant="ghost" asChild>
-            <Link href="/login" className="font-cta font-medium">Login</Link>
+            <Link href="/login">Login</Link>
           </Button>
-          <Button asChild className="font-cta font-medium">
+          <Button asChild>
             <Link href="/login">Get Started</Link>
           </Button>
         </div>
@@ -68,7 +68,7 @@ export default function Header() {
                 <div className="flex items-center justify-between border-b pb-4">
                   <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
                     <Scale className="h-6 w-6 text-primary" />
-                    <span className="font-headline text-xl font-bold text-foreground">
+                    <span className="text-xl font-bold text-foreground">
                       LexAI
                     </span>
                   </Link>
@@ -87,10 +87,10 @@ export default function Header() {
                   ))}
                 </nav>
                 <div className="mt-auto flex flex-col gap-4 border-t pt-4">
-                  <Button variant="outline" asChild className="w-full font-cta font-medium text-lg py-6">
+                  <Button variant="outline" asChild className="w-full text-lg py-6">
                     <Link href="/login">Login</Link>
                   </Button>
-                  <Button asChild className="w-full font-cta font-medium text-lg py-6">
+                  <Button asChild className="w-full text-lg py-6">
                     <Link href="/login">Get Started</Link>
                   </Button>
                 </div>

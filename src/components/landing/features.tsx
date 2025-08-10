@@ -21,22 +21,22 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="py-20 md:py-28 bg-secondary">
+    <section id="features" className="py-20 md:py-28 bg-secondary/20">
       <div className="container max-w-7xl">
         <div className="text-center">
-          <h2 className="font-headline text-4xl font-bold tracking-tight">A Smarter Way to Practice Law</h2>
+          <h2 className="text-4xl font-bold tracking-tight">A Smarter Way to Practice Law</h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
             LexAI provides a suite of powerful tools designed to enhance your legal research and document management.
           </p>
         </div>
         <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, index) => (
-            <Card key={index} className="flex flex-col items-center text-center p-8 border-2 border-transparent hover:border-primary hover:shadow-2xl transition-all duration-300">
+            <Card key={index} className="flex flex-col items-center text-center p-8 bg-background/50 border-2 border-transparent hover:border-primary hover:shadow-2xl transition-all duration-300">
               <CardHeader className="p-0">
                 <div className="bg-primary/10 p-4 rounded-full mb-6">
                   {feature.icon}
                 </div>
-                <CardTitle className="font-headline text-2xl mb-2">{feature.title}</CardTitle>
+                <CardTitle className="text-2xl mb-2">{feature.title}</CardTitle>
                 <CardDescription className="text-base text-muted-foreground">{feature.description}</CardDescription>
               </CardHeader>
             </Card>
