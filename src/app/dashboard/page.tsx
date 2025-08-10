@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +26,7 @@ export default function DashboardPage() {
   const [analysisResult, setAnalysisResult] = useState<AnalyzeLegalClausesOutput | null>(null);
   const [redactionResult, setRedactionResult] = useState<RedactSensitiveDataOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeAccordionItems, setActiveAccordionItems] = useState(["analysis", "redaction", "deepsearch"]);
 
   const [deepSearchQuery, setDeepSearchQuery] = useState('');
   const [isDeepSearching, setIsDeepSearching] = useState(false);
@@ -75,11 +76,13 @@ export default function DashboardPage() {
     setRedactionResult(null);
 
     try {
-      const analysisPromise = analyzeLegalClauses({ documentText: text });
-      setAnalysisResult(await analysisPromise);
+        const analysisPromise = analyzeLegalClauses({ documentText: text });
+        const redactionPromise = redactSensitiveData({ documentText: text });
 
-      const redactionPromise = redactSensitiveData({ documentText: text });
-      setRedactionResult(await redactionPromise);
+        const [analysis, redaction] = await Promise.all([analysisPromise, redactionPromise]);
+        
+        setAnalysisResult(analysis);
+        setRedactionResult(redaction);
 
     } catch (e) {
       setError('An error occurred during analysis. Please try again.');
@@ -89,12 +92,16 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeepSearch = async () => {
-    if (!deepSearchQuery.trim()) return;
+  const handleDeepSearch = async (query?: string) => {
+    const searchQuery = (query || deepSearchQuery).trim();
+    if (!searchQuery) return;
+
     setIsDeepSearching(true);
     setDeepSearchResult(null);
+    setError(null);
+
     try {
-        const result = await deepSearch({ query: deepSearchQuery });
+        const result = await deepSearch({ query: searchQuery });
         setDeepSearchResult(result);
     } catch (e) {
         setError('DeepSearch failed. Please try again.');
@@ -103,6 +110,20 @@ export default function DashboardPage() {
         setIsDeepSearching(false);
     }
   };
+
+  const handleTextSelection = () => {
+    const selectedText = window.getSelection()?.toString().trim();
+    if (selectedText && selectedText.length > 0) {
+        // Expand accordions
+        setActiveAccordionItems(["analysis", "redaction", "deepsearch"]);
+        // Trigger analysis
+        handleAnalyze(selectedText);
+        // Trigger deep search
+        setDeepSearchQuery(selectedText);
+        handleDeepSearch(selectedText);
+    }
+  };
+
 
   const getRiskColor = (riskLevel: 'low' | 'medium' | 'high') => {
     switch (riskLevel) {
@@ -200,7 +221,7 @@ export default function DashboardPage() {
               <ScrollArea className="h-full">
                 <div className={cn("h-full w-full rounded-lg", isDragActive && "border-primary border-dashed border-2 bg-primary/5")}>
                   {documentText ? (
-                      <div className="p-6 whitespace-pre-wrap text-sm leading-relaxed">
+                      <div onMouseUp={handleTextSelection} className="p-6 whitespace-pre-wrap text-sm leading-relaxed">
                           {documentText}
                       </div>
                   ) : (
@@ -221,7 +242,7 @@ export default function DashboardPage() {
              <ScrollArea className="flex-grow">
                 <div className="p-4 pl-5">
                     <h2 className="text-lg font-semibold mb-4 font-serif">Document Tools</h2>
-                    <Accordion type="multiple" className="w-full space-y-3" defaultValue={["analysis", "redaction", "deepsearch"]}>
+                    <Accordion type="multiple" className="w-full space-y-3" value={activeAccordionItems} onValueChange={setActiveAccordionItems}>
                     <Card className="shadow-sm">
                         <AccordionItem value="analysis" className="border-none">
                         <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
@@ -303,7 +324,7 @@ export default function DashboardPage() {
                                             onChange={(e) => setDeepSearchQuery(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && handleDeepSearch()}
                                         />
-                                        <Button onClick={handleDeepSearch} disabled={isDeepSearching}>
+                                        <Button onClick={() => handleDeepSearch()} disabled={isDeepSearching}>
                                             {isDeepSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                                         </Button>
                                     </div>
@@ -369,3 +390,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
