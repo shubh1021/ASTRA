@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { deepSearch, DeepSearchOutput } from '@/ai/flows/deep-search';
-import { Loader2, Search, FileUp, X, File as FileIcon, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Search, FileUp, X, File as FileIcon } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -30,17 +30,46 @@ export default function DeepSearchPage() {
     }
   }, []);
 
+  const handleSearch = async (searchQuery?: string, searchFilePreview?: string) => {
+    const currentQuery = typeof searchQuery === 'string' ? searchQuery : query;
+    const currentFile = searchFilePreview || filePreview;
+
+    if (!currentQuery.trim() && !currentFile) {
+      setError('A search query or a file is required to perform a DeepSearch.');
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchResult(null);
+    setError(null);
+
+    try {
+      const result = await deepSearch({
+        query: currentQuery.trim() || 'Analyze the provided document.',
+        documentDataUri: currentFile || undefined,
+      });
+      setSearchResult(result);
+    } catch (e) {
+      setError('DeepSearch failed. Please check your API keys and try again.');
+      console.error(e);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const uploadedFile = acceptedFiles[0];
     if (uploadedFile) {
         setFile(uploadedFile);
         const reader = new FileReader();
         reader.onloadend = () => {
-            setFilePreview(reader.result as string);
+            const dataUri = reader.result as string;
+            setFilePreview(dataUri);
+            handleSearch(query, dataUri); 
         };
         reader.readAsDataURL(uploadedFile);
     }
-  }, []);
+  }, [query]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop,
@@ -52,34 +81,11 @@ export default function DeepSearchPage() {
   });
 
 
-  const handleSearch = async (searchQuery? : string) => {
-    const currentQuery = typeof searchQuery === 'string' ? searchQuery : query;
-    if (!currentQuery.trim()) {
-        setError('A search query is required to perform a DeepSearch.');
-        return;
-    }
-
-    setIsSearching(true);
-    setSearchResult(null);
-    setError(null);
-
-    try {
-      const result = await deepSearch({ 
-          query: currentQuery,
-          documentDataUri: filePreview || undefined,
-      });
-      setSearchResult(result);
-    } catch (e) {
-      setError('DeepSearch failed. Please check your API keys and try again.');
-      console.error(e);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-  
   const removeFile = () => {
     setFile(null);
     setFilePreview(null);
+    setSearchResult(null);
+    setError(null);
   }
 
   return (
@@ -96,7 +102,7 @@ export default function DeepSearchPage() {
             <div {...getRootProps()} className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer ${isDragActive ? 'border-primary' : 'border-border'}`}>
                 <input {...getInputProps()} />
                 <FileUp className="h-10 w-10 text-muted-foreground mb-2" />
-                <p className="text-muted-foreground text-sm">Drag & drop files here, or click to select files</p>
+                <p className="text-muted-foreground text-sm">Drag & drop a file here to analyze, or enter a query below.</p>
                 <p className="text-xs text-muted-foreground mt-1">Images, PDF, or .txt files supported</p>
             </div>
 
@@ -120,7 +126,7 @@ export default function DeepSearchPage() {
             <div className="flex gap-2">
                 <Input
                 type="text"
-                placeholder="Enter your legal query..."
+                placeholder="Optionally, add a query to refine your search..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -144,6 +150,13 @@ export default function DeepSearchPage() {
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
             </Alert>
+          )}
+          
+          {isSearching && (
+             <div className="text-center text-muted-foreground py-10 flex flex-col items-center gap-4">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p>Performing DeepSearch...</p>
+            </div>
           )}
 
           {searchResult && (
