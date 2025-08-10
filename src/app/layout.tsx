@@ -2,10 +2,10 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { Inter, Lora } from 'next/font/google';
+import { Inter, Source_Serif_4 } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const lora = Lora({ subsets: ['latin'], variable: '--font-lora' });
+const sourceSerif4 = Source_Serif_4({ subsets: ['latin'], variable: '--font-source-serif-4' });
 
 export const metadata: Metadata = {
   title: 'Astra',
@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="!scroll-smooth">
-      <body className={`${inter.variable} ${lora.variable} font-sans`}>
+      <body className={`${inter.variable} ${sourceSerif4.variable} font-sans`}>
         {children}
         <Toaster />
       </body>
