@@ -101,7 +101,7 @@ export default function DashboardLayout({
                 </Avatar>
                 <div>
                   <p className="font-semibold">User</p>
-                  <p className="text-xs text-muted-foreground">user@example.com</p>
+                  <p className="text-muted-foreground">user@example.com</p>
                 </div>
               </div>
             </CardContent>
