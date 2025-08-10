@@ -104,7 +104,7 @@ export default function DashboardPage() {
 
   const handleTextSelection = async () => {
     const selectedText = window.getSelection()?.toString().trim();
-    if (selectedText && selectedText.length > 10) { // Only trigger for selections longer than 10 chars
+    if (selectedText && selectedText.length > 10) { 
         setIsLoading(true);
         setError(null);
         setAnalysisResult(null);
@@ -119,10 +119,8 @@ export default function DashboardPage() {
             setAnalysisResult(analysis);
             setRedactionResult(redaction);
             
-            // Open the accordions to show the new results
             setActiveAccordionItems(["analysis", "redaction"]);
 
-            // Also trigger a deep search
             localStorage.setItem('deepSearchQuery', selectedText);
             router.push('/dashboard/deep-search');
 
@@ -157,7 +155,7 @@ export default function DashboardPage() {
     try {
         const result = await legalChatbot({
             query: currentQuery,
-            history: newMessages.slice(0, -1), // Send history without the current query
+            history: newMessages.slice(0, -1),
             documentDataUri: `data:text/plain;base64,${btoa(documentText)}`,
         });
         setAssistantMessages(prev => [...prev, { role: 'assistant', content: result.response }]);
@@ -212,12 +210,11 @@ export default function DashboardPage() {
       <header className="flex items-center justify-between p-4 border-b bg-background">
           <h1 className="text-xl font-semibold font-serif">Document Workspace</h1>
           <div className="flex items-center gap-4">
-              {/* Header content can go here if needed */}
+              
           </div>
       </header>
 
       <main ref={containerRef} className="flex-1 flex min-h-0 p-4 bg-secondary gap-1">
-        {/* Document Viewer */}
         <div style={{ width: `${panelsWidth.left}%` }}>
             <Card className="h-full flex flex-col min-h-0 shadow-sm" {...getRootProps()}>
             <input {...getInputProps()} />
@@ -267,7 +264,6 @@ export default function DashboardPage() {
           onMouseDown={handleMouseDownPanels}
         />
 
-        {/* AI Tools Panel */}
         <div style={{ width: `${panelsWidth.right}%` }} className="flex flex-col min-h-0">
             <ScrollArea className="flex-grow">
               <div className="p-4 pl-5">
