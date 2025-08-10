@@ -133,7 +133,7 @@ export default function OptimizationAssistantPage() {
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="capitalize font-medium">{optimizationResult.assignment.docDomain}</TableCell>
+                      <TableCell className="capitalize font-medium">{optimizationResult.assignment.docDomain.replace('_', ' ')}</TableCell>
                       <TableCell>{optimizationResult.assignment.lawyerName}</TableCell>
                       <TableCell>{optimizationResult.assignment.newLoad} documents</TableCell>
                     </TableRow>
