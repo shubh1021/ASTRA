@@ -1,83 +1,63 @@
 
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import { analyzeLegalClauses, AnalyzeLegalClausesOutput } from '@/ai/flows/analyze-legal-clauses';
 import { redactSensitiveData, RedactSensitiveDataOutput } from '@/ai/flows/redact-sensitive-data';
-import { Loader2, AlertTriangle, ShieldCheck, UploadCloud, FileText as FileTextIcon, Bot, Scale, Settings } from 'lucide-react';
+import { Loader2, AlertTriangle, ShieldCheck, FileText as FileTextIcon, Bot, Scale, Settings, ArrowLeft, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send, FileCode, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function DashboardPage() {
   const [documentText, setDocumentText] = useState('');
   const [fileName, setFileName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('analysis');
   const [analysisResult, setAnalysisResult] = useState<AnalyzeLegalClausesOutput | null>(null);
   const [redactionResult, setRedactionResult] = useState<RedactSensitiveDataOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = (file: File) => {
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
     if (file) {
-      setFileName(file.name);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
-        setDocumentText(text);
-        setError(null);
-      };
-      reader.onerror = () => {
-        setError('Failed to read the file. Please try another file.');
-        setFileName('');
-        setDocumentText('');
-      };
-      reader.readAsText(file);
+      if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+        setFileName(file.name);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target?.result as string;
+          setDocumentText(text);
+          setError(null);
+          handleAnalyze(text);
+        };
+        reader.onerror = () => {
+          setError('Failed to read the file. Please try another file.');
+          setFileName('');
+          setDocumentText('');
+        };
+        reader.readAsText(file);
+      } else {
+        setError('Unsupported file type. Please upload a .txt file.');
+      }
     }
-  };
+  }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFile(file);
-    }
-  };
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+    onDrop,
+    noClick: true,
+    noKeyboard: true,
+    accept: {
+        'text/plain': ['.txt'],
+    } 
+  });
 
-  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      handleFile(file);
-    }
-  };
-
-  const handleAnalyze = async () => {
-    if (!documentText.trim()) {
-      setError('Please upload a document to analyze.');
+  const handleAnalyze = async (text: string) => {
+    if (!text.trim()) {
+      setError('The document is empty.');
       return;
     }
     setIsLoading(true);
@@ -86,14 +66,13 @@ export default function DashboardPage() {
     setRedactionResult(null);
 
     try {
-      // Run analysis first
-      setActiveTab('analysis');
-      const analysis = await analyzeLegalClauses({ documentText });
+      const analysisPromise = analyzeLegalClauses({ documentText: text });
+      const redactionPromise = redactSensitiveData({ documentText: text });
+
+      const analysis = await analysisPromise;
       setAnalysisResult(analysis);
       
-      // Then run redaction
-      setActiveTab('redaction');
-      const redaction = await redactSensitiveData({ documentText });
+      const redaction = await redactionPromise;
       setRedactionResult(redaction);
 
     } catch (e) {
@@ -117,167 +96,170 @@ export default function DashboardPage() {
     }
   };
 
+  const { open } = useDropzone({
+    onDrop,
+     accept: {
+        'text/plain': ['.txt'],
+    } 
+  });
+
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
-      <aside className="w-16 flex flex-col items-center space-y-4 py-4 bg-secondary/30 border-r border-border">
-        <Link href="/dashboard">
-            <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-primary text-primary-foreground">
-                <Scale className="h-6 w-6" />
-            </div>
-        </Link>
-        <nav className="flex flex-col items-center space-y-2">
-            <Link href="/dashboard">
-                <div className="p-2 rounded-lg bg-secondary text-secondary-foreground">
-                    <Bot className="h-6 w-6" />
-                </div>
-            </Link>
-        </nav>
-        <div className="mt-auto">
-             <Link href="#">
-                <div className="p-2 rounded-lg hover:bg-secondary">
-                    <Settings className="h-6 w-6" />
-                </div>
-            </Link>
-        </div>
-      </aside>
-
+    <div className="flex h-screen bg-secondary/30 text-foreground">
       <div className="flex-1 flex flex-col">
-        <header className="flex items-center justify-between p-4 border-b border-border">
-          <h1 className="text-xl font-bold">Document Analysis</h1>
-          <Button onClick={handleAnalyze} disabled={isLoading || !documentText}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              'Analyze Document'
-            )}
-          </Button>
+        <header className="flex items-center justify-between p-4 border-b border-border bg-background">
+          <div className="flex items-center gap-4">
+            <Link href="/jurisdiction">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <h1 className="text-xl font-semibold">Document Workspace</h1>
+          </div>
         </header>
 
-        <main className="flex-1 grid md:grid-cols-2 gap-6 p-6 overflow-hidden">
-          <Card className="flex flex-col bg-secondary/20 border-border">
-            <CardHeader>
-              <CardTitle>Document</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col p-4">
-              <div 
-                className={cn(
-                  "flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer transition-colors",
-                  isDragging ? "border-primary bg-primary/10" : "border-border hover:border-primary/50",
-                  documentText ? "border-solid bg-background" : ""
-                )}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileChange}
-                  accept=".txt,.md,.html"
-                />
+        <main className="flex-1 grid md:grid-cols-3 gap-1 overflow-hidden">
+          {/* Document Viewer */}
+          <div className="md:col-span-2 flex flex-col bg-background p-4" {...getRootProps()}>
+            <input {...getInputProps()} />
+             <div className="flex items-center justify-between p-2 border-b border-border">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                    {fileName ? (
+                        <>
+                        <FileCode className="h-5 w-5 text-primary" />
+                        <span>{fileName}</span>
+                        </>
+                    ) : (
+                         <span>No document uploaded</span>
+                    )}
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon"><Search className="h-5 w-5" /></Button>
+                    <span className="text-sm font-semibold">100%</span>
+                    <Button variant="ghost" size="icon"><ZoomIn className="h-5 w-5" /></Button>
+                    <Button variant="ghost" size="icon"><ZoomOut className="h-5 w-5" /></Button>
+                    <Button variant="ghost" size="icon"><RotateCw className="h-5 w-5" /></Button>
+                    <Button variant="outline" size="sm" onClick={open}><Upload className="mr-2 h-4 w-4" /> New Document</Button>
+                </div>
+            </div>
+            <CardContent className="flex-1 p-2 mt-2">
+              <div className={cn("h-full w-full rounded-lg border bg-background", isDragActive && "border-primary")}>
                 {documentText ? (
-                  <div className="flex flex-col items-center text-center p-4">
-                    <FileTextIcon className="h-12 w-12 text-primary mb-2" />
-                    <p className="font-semibold">{fileName}</p>
-                    <p className="text-sm text-muted-foreground">({(documentText.length / 1024).toFixed(2)} KB)</p>
-                    <Button variant="link" size="sm" className="mt-2">Click or drop another file to replace</Button>
-                  </div>
+                    <div className="p-8 whitespace-pre-wrap text-sm leading-relaxed overflow-auto h-full">
+                        {documentText}
+                    </div>
                 ) : (
-                  <div className="flex flex-col items-center text-center text-muted-foreground">
-                    <UploadCloud className="h-12 w-12 mb-2" />
-                    <p className="font-semibold">Drag & drop files here</p>
-                    <p className="text-sm">or click to browse</p>
-                    <p className="text-xs mt-2">Supports .txt, .md, .html files</p>
+                  <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8" onClick={open}>
+                      <Upload className="h-16 w-16 mb-4 text-primary/50" />
+                      <h3 className="text-lg font-semibold">Upload your document</h3>
+                      <p className="text-sm">Drag and drop a .txt file here or click to select a file.</p>
+                       {isDragActive && <p className="text-primary mt-2">Drop the file to upload!</p>}
                   </div>
                 )}
               </div>
             </CardContent>
-          </Card>
+          </div>
           
-          <Card className="flex flex-col bg-secondary/20 border-border">
-            <CardHeader>
-              <CardTitle>AI Tools</CardTitle>
-            </CardHeader>
-            <CardContent className="flex-1">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="analysis">Clause Analysis</TabsTrigger>
-                  <TabsTrigger value="redaction">Redaction</TabsTrigger>
-                </TabsList>
-                <div className="flex-1 overflow-y-auto mt-4 pr-2">
-                  {(isLoading && !analysisResult && !redactionResult) && (
-                    <div className="flex items-center justify-center h-full">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                  )}
-                  {error && !isLoading && (
-                    <div className="flex flex-col items-center justify-center h-full text-destructive">
-                      <AlertTriangle className="h-8 w-8 mb-2" />
-                      <p>{error}</p>
-                    </div>
-                  )}
-                  
-                  <TabsContent value="analysis" className="m-0">
-                    {isLoading && !analysisResult && (
-                      <div className="flex items-center justify-center h-full pt-16">
-                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          {/* AI Tools Panel */}
+          <aside className="md:col-span-1 flex flex-col bg-background p-4 border-l border-border">
+            <h2 className="text-lg font-semibold mb-4">Document Tools</h2>
+            <Accordion type="multiple" className="w-full space-y-3" defaultValue={["analysis", "redaction", "deepsearch"]}>
+              <Card className="bg-secondary/30">
+                <AccordionItem value="analysis" className="border-none">
+                  <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
+                     <div className="flex items-center gap-3">
+                        <FileCode className="h-5 w-5" /> Document Analysis
+                     </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    {isLoading && !analysisResult ? (
+                      <div className="flex items-center justify-center p-4">
+                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       </div>
-                    )}
-                    {!isLoading && !analysisResult && !error && (
-                      <div className="text-center text-muted-foreground pt-16">
-                        <p>Clause-by-clause analysis and risk assessment will appear here.</p>
-                      </div>
-                    )}
-                    {analysisResult && (
-                      <div className="space-y-4">
+                    ) : analysisResult ? (
+                      <div className="space-y-3">
                         {analysisResult.clauseAnalysis.map((item, index) => (
-                          <div key={index} className="p-4 border rounded-lg bg-background/50">
+                          <div key={index} className="p-3 border rounded-md bg-background/50">
                             <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-semibold">Clause Analysis</h4>
+                              <h4 className="font-semibold text-sm">Clause Analysis</h4>
                               <Badge className={cn("text-xs border", getRiskColor(item.riskLevel))}>
                                 {item.riskLevel.charAt(0).toUpperCase() + item.riskLevel.slice(1)} Risk
                               </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground italic mb-2">"{item.clause}"</p>
-                            <p className="text-sm">{item.explanation}</p>
+                            <p className="text-xs text-muted-foreground italic mb-2">"{item.clause}"</p>
+                            <p className="text-xs">{item.explanation}</p>
                           </div>
                         ))}
                       </div>
-                    )}
-                  </TabsContent>
-                  <TabsContent value="redaction" className="m-0">
-                     {isLoading && !redactionResult && (
-                      <div className="flex items-center justify-center h-full pt-16">
-                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    ) : (
+                      <div className="text-center text-muted-foreground text-sm p-4">
+                        <p>Upload a document to analyze clauses for risks.</p>
                       </div>
                     )}
-                    {!isLoading && !redactionResult && !error && (
-                      <div className="text-center text-muted-foreground pt-16">
-                        <p>Sensitive data will be automatically detected and redacted.</p>
+                  </AccordionContent>
+                </AccordionItem>
+              </Card>
+
+               <Card className="bg-secondary/30">
+                 <AccordionItem value="redaction" className="border-none">
+                  <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
+                      <div className="flex items-center gap-3">
+                        <ShieldCheck className="h-5 w-5" /> Redaction Review
+                     </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                     {isLoading && !redactionResult ? (
+                      <div className="flex items-center justify-center p-4">
+                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       </div>
-                    )}
-                    {redactionResult && (
-                      <div className="p-4 border rounded-lg bg-background/50 space-y-4">
+                    ) : redactionResult ? (
+                      <div className="p-3 border rounded-md bg-background/50 space-y-2">
                         <div className="flex items-center gap-2 text-green-400">
-                          <ShieldCheck className="h-5 w-5"/>
-                          <h4 className="font-semibold">Redaction Complete</h4>
+                          <ShieldCheck className="h-4 w-4"/>
+                          <h4 className="font-semibold text-sm">Redaction Complete</h4>
                         </div>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{redactionResult.redactedDocument}</p>
+                        <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">{redactionResult.redactedDocument}</p>
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted-foreground text-sm p-4">
+                        <p>Upload a document to find and redact sensitive info.</p>
                       </div>
                     )}
-                  </TabsContent>
-                
-                </div>
-              </Tabs>
-            </CardContent>
-          </Card>
+                  </AccordionContent>
+                </AccordionItem>
+              </Card>
+
+              <Card className="bg-secondary/30">
+               <AccordionItem value="deepsearch" className="border-none">
+                  <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
+                     <div className="flex items-center gap-3">
+                        <Globe className="h-5 w-5" /> DeepSearch
+                     </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    <div className="text-center text-muted-foreground text-sm p-4">
+                      <p>DeepSearch functionality will be available soon.</p>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Card>
+            </Accordion>
+            
+            <div className="mt-auto pt-4">
+                <h3 className="text-base font-semibold mb-2 flex items-center gap-2"><Bot className="h-5 w-5" /> Document Assistant</h3>
+                <Card className="bg-secondary/30 p-3">
+                    <div className="bg-background/50 p-2 rounded-md text-sm text-muted-foreground">
+                        I'm here to help with questions about your document. Ask me anything!
+                    </div>
+                    <div className="mt-2 relative">
+                        <Textarea placeholder="Ask about this document..." className="bg-background pr-10 text-sm" rows={2}/>
+                         <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8">
+                            <Send className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </Card>
+            </div>
+          </aside>
         </main>
       </div>
     </div>
