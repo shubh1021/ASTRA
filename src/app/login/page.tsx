@@ -1,11 +1,20 @@
+"use client";
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Scale } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  const handleSignIn = () => {
+    router.push('/dashboard');
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary p-4">
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 shadow-2xl rounded-lg overflow-hidden">
@@ -46,7 +55,7 @@ export default function LoginPage() {
               </div>
               <Input id="password" type="password" />
             </div>
-            <Button className="w-full font-cta font-medium text-base py-6">Sign In</Button>
+            <Button className="w-full font-cta font-medium text-base py-6" onClick={handleSignIn}>Sign In</Button>
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
@@ -57,7 +66,7 @@ export default function LoginPage() {
                 </span>
               </div>
             </div>
-            <Button variant="outline" className="w-full font-cta font-medium">
+            <Button variant="outline" className="w-full font-cta font-medium" onClick={handleSignIn}>
               Sign in with Google
             </Button>
              <p className="text-center text-sm text-muted-foreground mt-6">
