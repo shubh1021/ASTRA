@@ -35,7 +35,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-primary-foreground/20 bg-primary text-primary-foreground">
       <div className="container flex h-16 max-w-7xl items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2 text-primary-foreground">
           <Logo className="h-6" />
         </Link>
 
@@ -49,7 +49,7 @@ export default function Header() {
           <Button variant="ghost" asChild className="hover:bg-primary-foreground/10 hover:text-primary-foreground">
             <Link href="/login">Login</Link>
           </Button>
-          <Button asChild variant="outline" className="border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+          <Button asChild className="bg-primary-foreground text-primary hover:bg-primary-foreground/90">
             <Link href="/login">Get Started</Link>
           </Button>
         </div>
@@ -65,7 +65,7 @@ export default function Header() {
             <SheetContent side="right" className="w-full bg-primary text-primary-foreground border-l-primary-foreground/20">
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between border-b pb-4 border-primary-foreground/20">
-                  <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
+                  <Link href="/" className="flex items-center gap-2 text-primary-foreground" onClick={() => setIsMenuOpen(false)}>
                     <Logo className="h-6" />
                   </Link>
                   <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)} className="hover:bg-primary-foreground/10">
@@ -83,7 +83,7 @@ export default function Header() {
                   ))}
                 </nav>
                 <div className="mt-auto flex flex-col gap-4 border-t pt-4 border-primary-foreground/20">
-                  <Button variant="outline" asChild className="w-full text-lg py-6 border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+                  <Button variant="ghost" asChild className="w-full text-lg py-6 hover:bg-primary-foreground/10">
                     <Link href="/login">Login</Link>
                   </Button>
                   <Button asChild className="w-full text-lg py-6 bg-primary-foreground text-primary hover:bg-primary-foreground/90">
