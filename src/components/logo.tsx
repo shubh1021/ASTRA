@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 const AstraIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 160 200"
+    viewBox="0 0 300.000000 171.000000"
+    preserveAspectRatio="xMidYMid meet"
     role="img"
     aria-labelledby="title desc"
     {...props}
@@ -12,48 +13,24 @@ const AstraIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <desc id="desc">
       Minimal Greek pillar / column with capital, fluted shaft, and base
     </desc>
-    <g id="capital" transform="translate(0,6)">
-      <rect x="18" y="6" width="124" height="12" rx="4" fill="currentColor" />
-      <rect x="10" y="18" width="140" height="8" rx="3" fill="currentColor" />
-      <rect x="28" y="26" width="104" height="4" rx="2" fill="currentColor" />
+    <g
+      transform="translate(0.000000,171.000000) scale(0.100000,-0.100000)"
+      fill="currentColor"
+      stroke="none"
+    >
+      <path d="M670 1065 c0 -13 29 -15 200 -15 171 0 200 2 200 15 0 13 -29 15 -200 15 -171 0 -200 -2 -200 -15z" />
+      <path d="M642 1007 c-27 -28 -28 -68 -4 -90 22 -20 63 -22 80 -5 15 15 15 51 0 66 -21 21 -30 13 -23 -19 6 -28 5 -30 -16 -27 -27 3 -37 32 -19 53 18 22 402 22 420 0 18 -21 8 -50 -19 -53 -21 -3 -22 -1 -16 28 5 24 4 31 -6 28 -46 -15 -30 -88 20 -88 59 0 83 66 38 108 -22 21 -32 22 -228 22 -202 0 -206 0 -227 -23z" />
+      <path d="M750 973 c0 -10 31 -13 120 -13 89 0 120 3 120 13 0 9 -31 12 -120 12 -89 0 -120 -3 -120 -12z" />
+      <path d="M1343 933 c-4 -10 -32 -75 -64 -145 -47 -105 -54 -128 -40 -128 10 0 24 15 34 35 l17 35 75 0 75 0 14 -35 c8 -19 22 -35 30 -35 9 0 16 3 16 8 0 4 -28 69 -62 145 -60 131 -81 158 -95 120z m55 -105 l31 -68 -64 0 -64 0 23 53 c12 28 26 61 30 71 8 23 6 26 44 -56z" />
+      <path d="M1566 929 c-27 -21 -34 -56 -17 -87 5 -10 36 -30 69 -46 66 -31 82 -58 55 -88 -25 -27 -77 -23 -102 8 -20 26 -41 25 -41 -1 0 -26 51 -55 97 -55 33 0 50 6 68 25 46 45 27 98 -47 130 -77 34 -101 72 -59 95 30 15 55 12 79 -10 25 -23 42 -26 42 -6 0 23 -50 56 -85 56 -18 0 -44 -9 -59 -21z" />
+      <path d="M1740 928 c0 -14 9 -18 40 -18 l40 0 0 -125 c0 -104 2 -125 15 -125 13 0 15 21 15 128 l0 128 40 -4 c34 -3 40 -1 40 14 0 17 -9 19 -95 19 -84 0 -95 -2 -95 -17z" />
+      <path d="M1974 941 c-2 -2 -4 -67 -4 -143 0 -133 1 -138 21 -138 18 0 20 5 18 53 l-3 52 32 2 c29 1 37 -5 69 -53 23 -34 43 -54 55 -54 17 0 15 6 -16 49 -20 27 -36 52 -36 56 0 4 11 16 26 27 21 17 25 27 22 66 -4 62 -33 83 -117 85 -35 1 -65 0 -67 -2z m147 -52 c32 -51 -21 -108 -91 -97 -20 3 -22 9 -22 58 0 30 0 58 1 61 2 11 103 -8 112 -22z" />
+      <path d="M2308 903 c-11 -26 -40 -90 -64 -142 -24 -52 -44 -96 -44 -97 0 -2 9 -4 19 -4 13 0 23 11 31 35 l12 35 78 0 79 0 12 -35 c8 -22 20 -35 31 -35 10 0 18 1 18 3 0 16 -128 281 -138 285 -7 2 -21 -16 -34 -45z m62 -65 c14 -35 27 -66 28 -70 2 -5 -24 -8 -58 -8 -46 0 -61 3 -57 13 4 6 16 38 29 69 13 32 25 58 28 58 3 0 16 -28 30 -62z" />
+      <path d="M750 775 l0 -165 -25 0 c-16 0 -25 -6 -25 -15 0 -13 26 -15 170 -15 144 0 170 2 170 15 0 9 -9 15 -25 15 l-25 0 0 165 0 165 -120 0 -120 0 0 -165z m210 -15 l0 -150 -90 0 -90 0 0 150 0 150 90 0 90 0 0 -150z" />
+      <path d="M830 896 c-1 -3 -1 -66 -1 -138 -1 -105 2 -133 13 -133 18 0 19 266 1 273 -7 2 -13 1 -13 -2z" />
+      <path d="M890 759 c0 -108 3 -140 13 -137 8 3 13 42 15 135 2 110 0 132 -13 137 -13 5 -15 -13 -15 -135z" />
+      <path d="M670 545 c0 -13 29 -15 200 -15 171 0 200 2 200 15 0 13 -29 15 -200 15 -171 0 -200 -2 -200 -15z" />
     </g>
-    <g id="shaft" transform="translate(0,34)">
-      <rect x="36" y="0" width="88" height="110" rx="6" fill="currentColor" />
-      <path
-        d="M56 6 C58 40, 58 80, 56 104"
-        stroke="#ffffff22"
-        strokeWidth="6"
-        fill="none"
-        strokeLinecap="round"
-      />
-      <path
-        d="M80 6 C82 40, 82 80, 80 104"
-        stroke="#ffffff22"
-        strokeWidth="6"
-        fill="none"
-        strokeLinecap="round"
-      />
-      <path
-        d="M104 6 C102 40, 102 80, 104 104"
-        stroke="#ffffff22"
-        strokeWidth="6"
-        fill="none"
-        strokeLinecap="round"
-      />
-    </g>
-    <g id="base" transform="translate(0,146)">
-      <rect x="8" y="0" width="144" height="12" rx="3" fill="currentColor" />
-      <rect x="20" y="12" width="120" height="12" rx="3" fill="currentColor" />
-      <rect x="32" y="24" width="96" height="10" rx="3" fill="currentColor" />
-    </g>
-    <path
-      d="M36 34 h88 v110 h-88 z"
-      fill="none"
-      stroke="#071428"
-      strokeOpacity="0.12"
-      strokeWidth="2"
-      rx="6"
-    />
   </svg>
 );
 
