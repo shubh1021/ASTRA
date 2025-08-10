@@ -69,9 +69,9 @@ export default function DashboardPage() {
 
     try {
       const analysisPromise = analyzeLegalClauses({ documentText: text });
-      setAnalysisResult(await analysisPromise);
-      
       const redactionPromise = redactSensitiveData({ documentText: text });
+      
+      setAnalysisResult(await analysisPromise);
       setRedactionResult(await redactionPromise);
 
     } catch (e) {
