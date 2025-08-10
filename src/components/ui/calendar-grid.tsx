@@ -1,14 +1,17 @@
 
 "use client"
 
-import { useCalendarGrid, useLocale } from "react-aria";
-import { getWeeksInMonth } from "@internationalized/date";
+import { useCalendarGrid } from "react-aria";
 import { CalendarCell } from "./calendar-cell";
+import { useCalendarAria } from "@/hooks/use-calendar-aria";
 
 export function CalendarGrid({ state, ...props }: any) {
-  const { locale } = useLocale();
+  const { locale } = useCalendarAria({});
   const { gridProps, headerProps, weekDays } = useCalendarGrid(props, state);
-  const weeksInMonth = getWeeksInMonth(state.visibleRange.start, locale);
+
+  const weeksInMonth = locale ? state.getWeeksInMonth(locale) : 0;
+
+  if(!locale || weeksInMonth === 0) return null;
 
   return (
     <table {...gridProps} className="w-full border-collapse">
@@ -25,7 +28,7 @@ export function CalendarGrid({ state, ...props }: any) {
         {[...new Array(weeksInMonth).keys()].map((weekIndex) => (
           <tr key={weekIndex}>
             {state
-              .getDatesInWeek(weekIndex)
+              .getDatesInWeek(weekIndex, locale)
               .map((date: any, i: number) =>
                 date ? (
                   <CalendarCell key={i} state={state} date={date} />
@@ -39,3 +42,5 @@ export function CalendarGrid({ state, ...props }: any) {
     </table>
   );
 }
+
+    

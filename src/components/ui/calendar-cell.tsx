@@ -2,12 +2,15 @@
 "use client"
 
 import { useRef } from "react";
-import { useCalendarCell, useLocale } from "react-aria";
-import { isSameDay, getDayOfWeek, isToday as isTodayUtil } from "@internationalized/date";
+import { useCalendarCell } from "react-aria";
+import { isToday as isTodayUtil } from "@internationalized/date";
 import { cn } from "@/lib/utils";
+import { useCalendarAria } from "@/hooks/use-calendar-aria";
 
 export function CalendarCell({ state, date }: any) {
   const ref = useRef(null);
+  const { locale } = useCalendarAria({});
+
   const {
     cellProps,
     buttonProps,
@@ -18,9 +21,9 @@ export function CalendarCell({ state, date }: any) {
     isFocused,
   } = useCalendarCell({ date }, state, ref);
 
-  const { locale } = useLocale();
-  const dayOfWeek = getDayOfWeek(date, locale);
   const isToday = isTodayUtil(date, "UTC");
+
+  const dayOfWeek = locale ? date.getDayOfWeek(locale) : -1;
 
   return (
     <td
@@ -48,3 +51,5 @@ export function CalendarCell({ state, date }: any) {
     </td>
   );
 }
+
+    
