@@ -10,6 +10,8 @@ import { deepSearch, DeepSearchOutput } from '@/ai/flows/deep-search';
 import { Loader2, Search, FileUp, X, File as FileIcon, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 export default function DeepSearchPage() {
   const [query, setQuery] = useState('');
@@ -52,7 +54,10 @@ export default function DeepSearchPage() {
 
   const handleSearch = async (searchQuery? : string) => {
     const currentQuery = typeof searchQuery === 'string' ? searchQuery : query;
-    if (!currentQuery.trim() && !file) return;
+    if (!currentQuery.trim()) {
+        setError('A search query is required to perform a DeepSearch.');
+        return;
+    }
 
     setIsSearching(true);
     setSearchResult(null);
@@ -133,10 +138,16 @@ export default function DeepSearchPage() {
           </div>
 
 
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          {error && (
+            <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
           {searchResult && (
-            <div className="space-y-6">
+            <div className="space-y-6 mt-6">
               <div>
                 <h3 className="font-semibold text-lg mb-2 font-serif">Summary</h3>
                 <p className="text-muted-foreground">{searchResult.summary}</p>
