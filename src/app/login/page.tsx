@@ -8,12 +8,25 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/logo';
+import { auth } from '@/lib/firebase';
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
 
   const handleSignIn = () => {
     router.push('/jurisdiction');
+  };
+
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      router.push('/jurisdiction');
+    } catch (error) {
+      console.error("Error during Google sign-in:", error);
+      // Optionally, show an error message to the user
+    }
   };
 
   return (
@@ -51,7 +64,7 @@ export default function LoginPage() {
               </span>
             </div>
           </div>
-          <Button variant="outline" className="w-full" onClick={handleSignIn}>
+          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
             Sign in with Google
           </Button>
             <p className="text-center text-sm text-muted-foreground mt-6">
