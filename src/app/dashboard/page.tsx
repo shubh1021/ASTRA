@@ -1,26 +1,81 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { analyzeLegalClauses, AnalyzeLegalClausesOutput } from '@/ai/flows/analyze-legal-clauses';
 import { redactSensitiveData, RedactSensitiveDataOutput } from '@/ai/flows/redact-sensitive-data';
-import { Loader2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Loader2, AlertTriangle, ShieldCheck, UploadCloud, FileText as FileTextIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const [documentText, setDocumentText] = useState('');
+  const [fileName, setFileName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalyzeLegalClausesOutput | null>(null);
   const [redactionResult, setRedactionResult] = useState<RedactSensitiveDataOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = (file: File) => {
+    if (file) {
+      setFileName(file.name);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result as string;
+        setDocumentText(text);
+        setError(null);
+      };
+      reader.onerror = () => {
+        setError('Failed to read the file. Please try another file.');
+        setFileName('');
+        setDocumentText('');
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFile(file);
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleFile(file);
+    }
+  };
 
   const handleAnalyze = async () => {
     if (!documentText.trim()) {
-      setError('Please paste a document to analyze.');
+      setError('Please upload a document to analyze.');
       return;
     }
     setIsLoading(true);
@@ -61,7 +116,7 @@ export default function DashboardPage() {
     <div className="flex flex-col h-screen bg-secondary">
       <header className="flex items-center justify-between p-4 bg-background border-b">
         <h1 className="text-xl font-bold font-headline">Document Analysis</h1>
-        <Button onClick={handleAnalyze} disabled={isLoading}>
+        <Button onClick={handleAnalyze} disabled={isLoading || !documentText}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -77,13 +132,42 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle>Document</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 flex flex-col">
-            <Textarea
-              placeholder="Paste your legal document here..."
-              className="flex-1 resize-none text-sm leading-relaxed"
-              value={documentText}
-              onChange={(e) => setDocumentText(e.target.value)}
-            />
+          <CardContent className="flex-1 flex flex-col p-4">
+             <div 
+              className={cn(
+                "flex-1 flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer transition-colors",
+                isDragging ? "border-primary bg-primary/10" : "border-border hover:border-primary/50",
+                documentText ? "border-solid" : ""
+              )}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+                accept=".txt,.md,.html"
+              />
+              {documentText ? (
+                <div className="flex flex-col items-center text-center p-4">
+                  <FileTextIcon className="h-12 w-12 text-primary mb-2" />
+                  <p className="font-semibold">{fileName}</p>
+                  <p className="text-sm text-muted-foreground">({(documentText.length / 1024).toFixed(2)} KB)</p>
+                  <Button variant="link" size="sm" className="mt-2">Click or drop another file to replace</Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center text-center text-muted-foreground">
+                  <UploadCloud className="h-12 w-12 mb-2" />
+                  <p className="font-semibold">Drag & drop files here</p>
+                  <p className="text-sm">or click to browse</p>
+                  <p className="text-xs mt-2">Supports .txt, .md, .html files</p>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
         
@@ -103,7 +187,7 @@ export default function DashboardPage() {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 )}
-                {error && (
+                {error && !isLoading && (
                    <div className="flex flex-col items-center justify-center h-full text-destructive">
                     <AlertTriangle className="h-8 w-8 mb-2" />
                     <p>{error}</p>
@@ -160,3 +244,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
