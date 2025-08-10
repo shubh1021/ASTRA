@@ -67,11 +67,11 @@ export default function DashboardLayout({
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start items-start text-base py-6 h-auto",
+                  "w-full justify-start items-start text-base py-3 h-auto",
                   pathname === item.href && "bg-secondary"
                 )}
               >
-                <item.icon className="mr-3 h-5 w-5 mt-1 flex-shrink-0"/>
+                <item.icon className="mr-3 h-5 w-5 flex-shrink-0"/>
                 <div className="flex flex-col items-start text-left">
                   <span>{item.label}</span>
                   <span className="text-xs text-muted-foreground font-normal">{item.description}</span>
