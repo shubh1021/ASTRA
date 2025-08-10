@@ -37,8 +37,8 @@ export default function LegalChatbotPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-secondary p-4 md:p-8">
-      <Card className="w-full max-w-4xl mx-auto shadow-lg flex flex-col h-[calc(100vh-4rem)]">
+    <main className="flex flex-col h-full bg-secondary p-4 md:p-8">
+      <Card className="w-full max-w-4xl mx-auto shadow-lg flex flex-col h-full">
         <CardHeader>
           <CardTitle className="font-serif text-2xl flex items-center gap-3">
             <Bot className="h-6 w-6" />
@@ -94,8 +94,6 @@ export default function LegalChatbotPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }
-
-    

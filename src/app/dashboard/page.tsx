@@ -1,23 +1,21 @@
 
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { analyzeLegalClauses, AnalyzeLegalClausesOutput } from '@/ai/flows/analyze-legal-clauses';
 import { redactSensitiveData, RedactSensitiveDataOutput } from '@/ai/flows/redact-sensitive-data';
 import { deepSearch } from '@/ai/flows/deep-search';
-import { Loader2, ShieldCheck, FileCode, Bot, Search, ArrowLeft, ZoomIn, ZoomOut, RotateCw, Upload, Send, Settings, User, LogOut, File as FileIcon, BrainCircuit } from 'lucide-react';
+import { Loader2, ShieldCheck, FileCode, Bot, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import Logo from '@/components/logo';
+import { useRouter } from 'next/navigation';
+
 
 export default function DashboardPage() {
   const [documentText, setDocumentText] = useState('');
@@ -27,33 +25,7 @@ export default function DashboardPage() {
   const [redactionResult, setRedactionResult] = useState<RedactSensitiveDataOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeAccordionItems, setActiveAccordionItems] = useState(["analysis", "redaction"]);
-
-  const [sidebarWidth, setSidebarWidth] = useState(256);
-  const isResizing = useRef(false);
-  const pathname = usePathname();
-
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    isResizing.current = true;
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (isResizing.current) {
-      const newWidth = e.clientX;
-      if (newWidth > 200 && newWidth < 500) {
-        setSidebarWidth(newWidth);
-      }
-    }
-  };
-
-  const handleMouseUp = () => {
-    isResizing.current = false;
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-  };
+  const router = useRouter();
 
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -121,11 +93,8 @@ export default function DashboardPage() {
     if (selectedText && selectedText.length > 0) {
         setActiveAccordionItems(["analysis", "redaction"]);
         handleAnalyze(selectedText);
-        try {
-          await deepSearch({ query: selectedText });
-        } catch (e) {
-            console.error(e);
-        }
+        localStorage.setItem('deepSearchQuery', selectedText);
+        router.push('/dashboard/deep-search');
     }
   };
 
@@ -143,224 +112,148 @@ export default function DashboardPage() {
     }
   };
 
-  const navItems = [
-    { href: '/dashboard', label: 'Document Analysis', icon: FileIcon },
-    { href: '/dashboard/deep-search', label: 'DeepSearch', icon: Search },
-    { href: '/dashboard/legal-chatbot', label: 'Legal Question', icon: BrainCircuit },
-  ];
-
   return (
-    <div className="flex h-screen bg-secondary">
-        {/* Sidebar */}
-        <nav 
-            className="flex-col bg-background p-4 hidden md:flex relative"
-            style={{ width: `${sidebarWidth}px` }}
-        >
-            <div className="mb-8">
-                <Logo className="h-20" />
-            </div>
-            <div className="flex-1 space-y-2 overflow-y-auto">
-                 {navItems.map((item) => (
-                    <Link href={item.href} key={item.href}>
-                         <Button
-                            variant="ghost"
-                            className={cn(
-                                "w-full justify-start text-base py-6",
-                                pathname === item.href && "bg-secondary"
-                            )}
-                        >
-                            <item.icon className="mr-3 h-5 w-5"/>
-                            {item.label}
-                        </Button>
-                    </Link>
-                 ))}
-            </div>
-            <div className="mt-auto space-y-2">
-                 <Button variant="ghost" className="w-full justify-start">
-                    <Settings className="mr-3 h-5 w-5"/>
-                    Settings
-                </Button>
-                 <Button variant="ghost" className="w-full justify-start">
-                    <User className="mr-3 h-5 w-5"/>
-                    Account
-                </Button>
-                 <Link href="/login">
-                    <Button variant="ghost" className="w-full justify-start">
-                        <LogOut className="mr-3 h-5 w-5"/>
-                        Logout
-                    </Button>
-                </Link>
-                <Card className="bg-secondary">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                            <Avatar>
-                                <AvatarImage src="https://github.com/shadcn.png" />
-                                <AvatarFallback>CN</AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <p className="font-semibold">User</p>
-                                <p className="text-xs text-muted-foreground">user@example.com</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </nav>
-        
-        <div 
-          className="w-2 cursor-col-resize bg-border hover:bg-primary transition-colors"
-          onMouseDown={handleMouseDown}
-        />
-
-        {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-0">
-        <header className="flex items-center justify-between p-4 border-b bg-background">
-            <h1 className="text-xl font-semibold font-serif">Document Workspace</h1>
-            <div className="flex items-center gap-4">
-                <Link href="/dashboard">
-                    <Button variant={pathname === '/dashboard' ? 'default' : 'outline'}>
-                        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-                    </Button>
-                </Link>
-            </div>
-        </header>
-
-        <main className="flex-1 grid md:grid-cols-3 gap-1 min-h-0 p-4 bg-secondary">
-          {/* Document Viewer */}
-          <Card className="md:col-span-2 flex flex-col min-h-0 shadow-sm" {...getRootProps()}>
-            <input {...getInputProps()} />
-             <CardHeader className="flex-row items-center justify-between p-3 border-b">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                    {fileName ? (
-                        <>
-                        <FileCode className="h-5 w-5 text-primary" />
-                        <span>{fileName}</span>
-                        </>
-                    ) : (
-                         <span className="text-muted-foreground">No document uploaded</span>
-                    )}
-                </div>
-                <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon"><Search className="h-5 w-5" /></Button>
-                    <Button variant="ghost" size="icon"><ZoomOut className="h-5 w-5" /></Button>
-                    <span className="text-sm font-semibold px-2">100%</span>
-                    <Button variant="ghost" size="icon"><ZoomIn className="h-5 w-5" /></Button>
-                    <Button variant="ghost" size="icon"><RotateCw className="h-5 w-5" /></Button>
-                    <Button variant="outline" size="sm" onClick={open}><Upload className="mr-2 h-4 w-4" /> New Document</Button>
-                </div>
-            </CardHeader>
-            <CardContent className="flex-1 p-2 mt-2 min-h-0">
-              <ScrollArea className="h-full">
-                <div className={cn("h-full w-full rounded-lg", isDragActive && "border-primary border-dashed border-2 bg-primary/5")}>
-                  {documentText ? (
-                      <div onMouseUp={handleTextSelection} className="p-6 whitespace-pre-wrap text-sm leading-relaxed">
-                          {documentText}
-                      </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 min-h-[500px]" onClick={open}>
-                        <Upload className="h-16 w-16 mb-4 text-primary/50" />
-                        <h3 className="text-lg font-semibold font-serif">Upload your document</h3>
-                        <p className="text-sm">Drag and drop a .txt file here or click to select a file.</p>
-                         {isDragActive && <p className="text-primary mt-2">Drop the file to upload!</p>}
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-
-          {/* AI Tools Panel */}
-          <div className="md:col-span-1 flex flex-col min-h-0">
-             <ScrollArea className="flex-grow">
-                <div className="p-4 pl-5">
-                    <h2 className="text-lg font-semibold mb-4 font-serif">Document Tools</h2>
-                    <Accordion type="multiple" className="w-full space-y-3" value={activeAccordionItems} onValueChange={setActiveAccordionItems}>
-                    <Card className="shadow-sm">
-                        <AccordionItem value="analysis" className="border-none">
-                        <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
-                            <div className="flex items-center gap-3">
-                                <FileCode className="h-5 w-5" /> Document Analysis
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-4 pb-4">
-                            {isLoading && !analysisResult ? (
-                            <div className="flex items-center justify-center p-4">
-                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                            </div>
-                            ) : analysisResult ? (
-                            <div className="space-y-3">
-                                {analysisResult.clauseAnalysis.map((item, index) => (
-                                <div key={index} className="p-3 border rounded-md bg-secondary">
-                                    <div className="flex items-center justify-between mb-2">
-                                    <h4 className="font-semibold text-sm">Clause Analysis</h4>
-                                    <Badge variant="outline" className={cn("text-xs border font-medium", getRiskColor(item.riskLevel))}>
-                                        {item.riskLevel.charAt(0).toUpperCase() + item.riskLevel.slice(1)} Risk
-                                    </Badge>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground italic mb-2">"{item.clause}"</p>
-                                    <p className="text-xs">{item.explanation}</p>
-                                </div>
-                                ))}
-                            </div>
-                            ) : (
-                            <div className="text-center text-muted-foreground text-sm p-4">
-                                <p>Upload a document to analyze clauses for risks.</p>
-                            </div>
-                            )}
-                        </AccordionContent>
-                        </AccordionItem>
-                    </Card>
-
-                    <Card className="shadow-sm">
-                        <AccordionItem value="redaction" className="border-none">
-                        <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
-                            <div className="flex items-center gap-3">
-                                <ShieldCheck className="h-5 w-5" /> Redaction Review
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-4 pb-4">
-                            {isLoading && !redactionResult ? (
-                            <div className="flex items-center justify-center p-4">
-                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                            </div>
-                            ) : redactionResult ? (
-                            <div className="p-3 border rounded-md bg-secondary space-y-2">
-                                <div className="flex items-center gap-2 text-green-600">
-                                <ShieldCheck className="h-4 w-4"/>
-                                <h4 className="font-semibold text-sm">Redaction Complete</h4>
-                                </div>
-                                <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">{redactionResult.redactedDocument}</p>
-                            </div>
-                            ) : (
-                            <div className="text-center text-muted-foreground text-sm p-4">
-                                <p>Upload a document to find and redact sensitive info.</p>
-                            </div>
-                            )}
-                        </AccordionContent>
-                        </AccordionItem>
-                    </Card>
-                    </Accordion>
-                </div>
-            </ScrollArea>
-            <div className="p-4 pl-5 border-t mt-auto">
-                <h3 className="text-base font-semibold mb-2 flex items-center gap-2 font-serif"><Bot className="h-5 w-5" /> Document Assistant</h3>
-                <Card className="p-3 shadow-sm">
-                    <div className="bg-secondary p-2 rounded-md text-sm text-muted-foreground">
-                        I'm here to help with questions about your document. Ask me anything!
-                    </div>
-                    <div className="mt-2 relative">
-                        <Textarea placeholder="Ask about this document..." className="bg-background pr-10 text-sm" rows={2}/>
-                         <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8">
-                            <Send className="h-4 w-4" />
-                        </Button>
-                    </div>
-                </Card>
-            </div>
+    <>
+      <header className="flex items-center justify-between p-4 border-b bg-background">
+          <h1 className="text-xl font-semibold font-serif">Document Workspace</h1>
+          <div className="flex items-center gap-4">
+              {/* Header content can go here if needed */}
           </div>
-        </main>
-      </div>
-    </div>
+      </header>
+
+      <main className="flex-1 grid md:grid-cols-3 gap-1 min-h-0 p-4 bg-secondary">
+        {/* Document Viewer */}
+        <Card className="md:col-span-2 flex flex-col min-h-0 shadow-sm" {...getRootProps()}>
+          <input {...getInputProps()} />
+            <CardHeader className="flex-row items-center justify-between p-3 border-b">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                  {fileName ? (
+                      <>
+                      <FileCode className="h-5 w-5 text-primary" />
+                      <span>{fileName}</span>
+                      </>
+                  ) : (
+                        <span className="text-muted-foreground">No document uploaded</span>
+                  )}
+              </div>
+              <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon"><Search className="h-5 w-5" /></Button>
+                  <Button variant="ghost" size="icon"><ZoomOut className="h-5 w-5" /></Button>
+                  <span className="text-sm font-semibold px-2">100%</span>
+                  <Button variant="ghost" size="icon"><ZoomIn className="h-5 w-5" /></Button>
+                  <Button variant="ghost" size="icon"><RotateCw className="h-5 w-5" /></Button>
+                  <Button variant="outline" size="sm" onClick={open}><Upload className="mr-2 h-4 w-4" /> New Document</Button>
+              </div>
+          </CardHeader>
+          <CardContent className="flex-1 p-2 mt-2 min-h-0">
+            <ScrollArea className="h-full">
+              <div className={cn("h-full w-full rounded-lg", isDragActive && "border-primary border-dashed border-2 bg-primary/5")}>
+                {documentText ? (
+                    <div onMouseUp={handleTextSelection} className="p-6 whitespace-pre-wrap text-sm leading-relaxed">
+                        {documentText}
+                    </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 min-h-[500px]" onClick={open}>
+                      <Upload className="h-16 w-16 mb-4 text-primary/50" />
+                      <h3 className="text-lg font-semibold font-serif">Upload your document</h3>
+                      <p className="text-sm">Drag and drop a .txt file here or click to select a file.</p>
+                        {isDragActive && <p className="text-primary mt-2">Drop the file to upload!</p>}
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* AI Tools Panel */}
+        <div className="md:col-span-1 flex flex-col min-h-0">
+            <ScrollArea className="flex-grow">
+              <div className="p-4 pl-5">
+                  <h2 className="text-lg font-semibold mb-4 font-serif">Document Tools</h2>
+                  <Accordion type="multiple" className="w-full space-y-3" value={activeAccordionItems} onValueChange={setActiveAccordionItems}>
+                  <Card className="shadow-sm">
+                      <AccordionItem value="analysis" className="border-none">
+                      <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
+                          <div className="flex items-center gap-3">
+                              <FileCode className="h-5 w-5" /> Document Analysis
+                          </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4">
+                          {isLoading && !analysisResult ? (
+                          <div className="flex items-center justify-center p-4">
+                              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                          </div>
+                          ) : analysisResult ? (
+                          <div className="space-y-3">
+                              {analysisResult.clauseAnalysis.map((item, index) => (
+                              <div key={index} className="p-3 border rounded-md bg-secondary">
+                                  <div className="flex items-center justify-between mb-2">
+                                  <h4 className="font-semibold text-sm">Clause Analysis</h4>
+                                  <Badge variant="outline" className={cn("text-xs border font-medium", getRiskColor(item.riskLevel))}>
+                                      {item.riskLevel.charAt(0).toUpperCase() + item.riskLevel.slice(1)} Risk
+                                  </Badge>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground italic mb-2">"{item.clause}"</p>
+                                  <p className="text-xs">{item.explanation}</p>
+                              </div>
+                              ))}
+                          </div>
+                          ) : (
+                          <div className="text-center text-muted-foreground text-sm p-4">
+                              <p>Upload a document to analyze clauses for risks.</p>
+                          </div>
+                          )}
+                      </AccordionContent>
+                      </AccordionItem>
+                  </Card>
+
+                  <Card className="shadow-sm">
+                      <AccordionItem value="redaction" className="border-none">
+                      <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
+                          <div className="flex items-center gap-3">
+                              <ShieldCheck className="h-5 w-5" /> Redaction Review
+                          </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-4 pb-4">
+                          {isLoading && !redactionResult ? (
+                          <div className="flex items-center justify-center p-4">
+                              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                          </div>
+                          ) : redactionResult ? (
+                          <div className="p-3 border rounded-md bg-secondary space-y-2">
+                              <div className="flex items-center gap-2 text-green-600">
+                              <ShieldCheck className="h-4 w-4"/>
+                              <h4 className="font-semibold text-sm">Redaction Complete</h4>
+                              </div>
+                              <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">{redactionResult.redactedDocument}</p>
+                          </div>
+                          ) : (
+                          <div className="text-center text-muted-foreground text-sm p-4">
+                              <p>Upload a document to find and redact sensitive info.</p>
+                          </div>
+                          )}
+                      </AccordionContent>
+                      </AccordionItem>
+                  </Card>
+                  </Accordion>
+              </div>
+          </ScrollArea>
+          <div className="p-4 pl-5 border-t mt-auto">
+              <h3 className="text-base font-semibold mb-2 flex items-center gap-2 font-serif"><Bot className="h-5 w-5" /> Document Assistant</h3>
+              <Card className="p-3 shadow-sm">
+                  <div className="bg-secondary p-2 rounded-md text-sm text-muted-foreground">
+                      I'm here to help with questions about your document. Ask me anything!
+                  </div>
+                  <div className="mt-2 relative">
+                      <Textarea placeholder="Ask about this document..." className="bg-background pr-10 text-sm" rows={2}/>
+                        <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8">
+                          <Send className="h-4 w-4" />
+                      </Button>
+                  </div>
+              </Card>
+          </div>
+        </div>
+      </main>
+    </>
   );
 }
-
-    

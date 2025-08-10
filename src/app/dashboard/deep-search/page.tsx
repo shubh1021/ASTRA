@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,15 +15,25 @@ export default function DeepSearchPage() {
   const [searchResult, setSearchResult] = useState<DeepSearchOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = async () => {
-    if (!query.trim()) return;
+  useEffect(() => {
+    const searchQuery = localStorage.getItem('deepSearchQuery');
+    if (searchQuery) {
+      setQuery(searchQuery);
+      handleSearch(searchQuery);
+      localStorage.removeItem('deepSearchQuery');
+    }
+  }, []);
+
+  const handleSearch = async (searchQuery? : string) => {
+    const currentQuery = typeof searchQuery === 'string' ? searchQuery : query;
+    if (!currentQuery.trim()) return;
 
     setIsSearching(true);
     setSearchResult(null);
     setError(null);
 
     try {
-      const result = await deepSearch({ query });
+      const result = await deepSearch({ query: currentQuery });
       setSearchResult(result);
     } catch (e) {
       setError('DeepSearch failed. Please check your API keys and try again.');
@@ -34,7 +44,7 @@ export default function DeepSearchPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-secondary p-4 md:p-8">
+    <main className="flex flex-col h-full bg-secondary p-4 md:p-8">
       <Card className="w-full max-w-4xl mx-auto shadow-lg">
         <CardHeader>
           <CardTitle className="font-serif text-2xl flex items-center gap-3">
@@ -52,7 +62,7 @@ export default function DeepSearchPage() {
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="text-base"
             />
-            <Button onClick={handleSearch} disabled={isSearching} size="lg">
+            <Button onClick={() => handleSearch()} disabled={isSearching} size="lg">
               {isSearching ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
@@ -95,8 +105,6 @@ export default function DeepSearchPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 }
-
-    
