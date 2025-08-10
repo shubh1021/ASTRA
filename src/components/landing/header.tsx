@@ -22,7 +22,7 @@ export default function Header() {
     <Link href={href} passHref>
       <span
         className={cn(
-          "text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+          "text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground",
           className
         )}
         onClick={() => setIsMenuOpen(false)}
@@ -33,7 +33,7 @@ export default function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-primary-foreground/20 bg-primary text-primary-foreground">
       <div className="container flex h-16 max-w-7xl items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <Logo className="h-6" />
@@ -46,10 +46,10 @@ export default function Header() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button variant="ghost" asChild>
+          <Button variant="ghost" asChild className="hover:bg-primary-foreground/10 hover:text-primary-foreground">
             <Link href="/login">Login</Link>
           </Button>
-          <Button asChild>
+          <Button asChild variant="outline" className="border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground hover:text-primary">
             <Link href="/login">Get Started</Link>
           </Button>
         </div>
@@ -57,18 +57,18 @@ export default function Header() {
         <div className="md:hidden">
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="hover:bg-primary-foreground/10">
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-full">
+            <SheetContent side="right" className="w-full bg-primary text-primary-foreground border-l-primary-foreground/20">
               <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between border-b pb-4">
+                <div className="flex items-center justify-between border-b pb-4 border-primary-foreground/20">
                   <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
                     <Logo className="h-6" />
                   </Link>
-                  <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)} className="hover:bg-primary-foreground/10">
                       <X className="h-6 w-6" />
                       <span className="sr-only">Close menu</span>
                   </Button>
@@ -82,11 +82,11 @@ export default function Header() {
                     />
                   ))}
                 </nav>
-                <div className="mt-auto flex flex-col gap-4 border-t pt-4">
-                  <Button variant="outline" asChild className="w-full text-lg py-6">
+                <div className="mt-auto flex flex-col gap-4 border-t pt-4 border-primary-foreground/20">
+                  <Button variant="outline" asChild className="w-full text-lg py-6 border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground hover:text-primary">
                     <Link href="/login">Login</Link>
                   </Button>
-                  <Button asChild className="w-full text-lg py-6">
+                  <Button asChild className="w-full text-lg py-6 bg-primary-foreground text-primary hover:bg-primary-foreground/90">
                     <Link href="/login">Get Started</Link>
                   </Button>
                 </div>
