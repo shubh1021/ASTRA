@@ -17,6 +17,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { getLocalTimeZone, today, parseDateTime, DateValue, ZonedDateTime } from '@internationalized/date';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { TimeField } from '@/components/ui/date-picker';
+import { I18nProvider } from 'react-aria';
 
 interface CalendarEvent {
   id: string;
@@ -134,86 +135,88 @@ export default function SchedulerPage() {
   }
 
   return (
-    <main className="flex flex-col h-full bg-secondary">
-      <Card className="m-4 md:m-8 flex-1 flex flex-col shadow-lg">
-        <CardHeader className="flex flex-row justify-between items-center">
-          <div>
-            <CardTitle className="font-serif text-2xl flex items-center gap-3">
-              <CalendarIcon className="h-6 w-6" />
-              Scheduler
-            </CardTitle>
-            <CardDescription>View, create, and manage your Google Calendar events.</CardDescription>
-          </div>
-          {user ? (
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground hidden md:inline">
-                Welcome, {user.displayName}
-              </span>
-              <Button variant="outline" onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
+    <I18nProvider locale="en-US">
+        <main className="flex flex-col h-full bg-secondary">
+        <Card className="m-4 md:m-8 flex-1 flex flex-col shadow-lg">
+            <CardHeader className="flex flex-row justify-between items-center">
+            <div>
+                <CardTitle className="font-serif text-2xl flex items-center gap-3">
+                <CalendarIcon className="h-6 w-6" />
+                Scheduler
+                </CardTitle>
+                <CardDescription>View, create, and manage your Google Calendar events.</CardDescription>
             </div>
-          ) : (
-            <Button onClick={handleGoogleSignIn}>
-              <LogIn className="mr-2 h-4 w-4" />
-              Connect Google Calendar
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-1">
-            <Calendar
-                aria-label="Date (Unavailable)"
-                disabled
-                className='w-full'
-            />
-             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="w-full mt-4" disabled={!user}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create New Event
+            {user ? (
+                <div className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground hidden md:inline">
+                    Welcome, {user.displayName}
+                </span>
+                <Button variant="outline" onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
                 </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Calendar Event</DialogTitle>
-                </DialogHeader>
-                <CreateEventForm accessToken={accessToken} onSuccess={() => {
-                  if (accessToken) fetchEvents(accessToken);
-                  setIsDialogOpen(false);
-                }} />
-              </DialogContent>
-            </Dialog>
-          </div>
-          <div className="md:col-span-2">
-            <h3 className="text-lg font-semibold mb-4 font-serif">Upcoming Events</h3>
-            {isSyncing && <Loader2 className="h-5 w-5 animate-spin" />}
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-              {user && sortedEvents.length > 0 ? (
-                sortedEvents.map(event => (
-                  <Card key={event.id} className="p-4 flex justify-between items-center">
-                    <div>
-                      <p className="font-semibold">{event.summary}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(event.start).toLocaleString()} - {new Date(event.end).toLocaleString()}
-                      </p>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteEvent(event.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </Card>
-                ))
-              ) : (
-                 <div className="text-center text-muted-foreground py-10">
-                    <p>{user ? "No upcoming events found." : "Please connect your Google Calendar to see your events."}</p>
                 </div>
-              )}
+            ) : (
+                <Button onClick={handleGoogleSignIn}>
+                <LogIn className="mr-2 h-4 w-4" />
+                Connect Google Calendar
+                </Button>
+            )}
+            </CardHeader>
+            <CardContent className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="md:col-span-1">
+                <Calendar
+                    aria-label="Date (Unavailable)"
+                    disabled
+                    className='w-full'
+                />
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button className="w-full mt-4" disabled={!user}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create New Event
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogHeader>
+                    <DialogTitle>Create New Calendar Event</DialogTitle>
+                    </DialogHeader>
+                    <CreateEventForm accessToken={accessToken} onSuccess={() => {
+                    if (accessToken) fetchEvents(accessToken);
+                    setIsDialogOpen(false);
+                    }} />
+                </DialogContent>
+                </Dialog>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </main>
+            <div className="md:col-span-2">
+                <h3 className="text-lg font-semibold mb-4 font-serif">Upcoming Events</h3>
+                {isSyncing && <Loader2 className="h-5 w-5 animate-spin" />}
+                <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                {user && sortedEvents.length > 0 ? (
+                    sortedEvents.map(event => (
+                    <Card key={event.id} className="p-4 flex justify-between items-center">
+                        <div>
+                        <p className="font-semibold">{event.summary}</p>
+                        <p className="text-sm text-muted-foreground">
+                            {new Date(event.start).toLocaleString()} - {new Date(event.end).toLocaleString()}
+                        </p>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteEvent(event.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    </Card>
+                    ))
+                ) : (
+                    <div className="text-center text-muted-foreground py-10">
+                        <p>{user ? "No upcoming events found." : "Please connect your Google Calendar to see your events."}</p>
+                    </div>
+                )}
+                </div>
+            </div>
+            </CardContent>
+        </Card>
+        </main>
+    </I18nProvider>
   );
 }
 
@@ -291,3 +294,5 @@ function CreateEventForm({ accessToken, onSuccess }: { accessToken: string | nul
     </form>
   )
 }
+
+    
