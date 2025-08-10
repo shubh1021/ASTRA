@@ -11,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { legalChatbot, LegalChatbotInput } from '@/ai/flows/legal-chatbot';
 import Image from 'next/image';
 import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser, OAuthProvider } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser } from 'firebase/auth';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -27,7 +27,6 @@ export default function LegalChatbotPage() {
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -37,18 +36,12 @@ export default function LegalChatbotPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-      if (currentUser) {
-        const tokenResult = await currentUser.getIdTokenResult();
-        // This is not the Google Calendar access token, but we handle that in the sign-in flow.
-      } else {
-        setAccessToken(null);
-      }
     });
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (initialLoad.current && !user) {
+    if (initialLoad.current) {
         const query = localStorage.getItem('chatbotQuery');
         const context = localStorage.getItem('chatbotContext');
         const fileName = localStorage.getItem('chatbotFileName');
@@ -74,28 +67,7 @@ export default function LegalChatbotPage() {
 
         initialLoad.current = false;
     }
-  }, [user]);
-
-  const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/calendar');
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      if (credential) {
-        setAccessToken(credential.accessToken || null);
-      }
-      setUser(result.user);
-    } catch (error) {
-      console.error("Google Sign-In Error", error);
-    }
-  };
-
-  const handleSignOut = async () => {
-    await signOut(auth);
-    setUser(null);
-    setAccessToken(null);
-  };
+  }, []);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const uploadedFile = acceptedFiles[0];
@@ -158,7 +130,6 @@ export default function LegalChatbotPage() {
         const payload: LegalChatbotInput = {
             query: query,
             history: messages,
-            accessToken: accessToken || undefined,
         };
         if(fileDataUri){
             payload.documentDataUri = fileDataUri;
@@ -196,17 +167,6 @@ export default function LegalChatbotPage() {
             <Bot className="h-6 w-6" />
             Legal Question Chatbot
           </CardTitle>
-           {user ? (
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground hidden md:inline">Welcome, {user.displayName}</span>
-              <Button variant="outline" onClick={handleSignOut}>Sign Out</Button>
-            </div>
-          ) : (
-            <Button onClick={handleGoogleSignIn}>
-              <LogIn className="mr-2 h-4 w-4" />
-              Connect Google Calendar
-            </Button>
-          )}
         </CardHeader>
         <CardContent className="flex-1 flex flex-col min-h-0">
           <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollAreaRef}>
@@ -261,7 +221,7 @@ export default function LegalChatbotPage() {
             <div className="relative">
               <input {...getInputProps()} />
               <Textarea
-                placeholder="Ask a legal question or a calendar command..."
+                placeholder="Ask a legal question..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {

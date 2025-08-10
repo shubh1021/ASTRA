@@ -11,7 +11,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { listCalendarEvents, createCalendarEvent, deleteCalendarEvent } from '@/ai/tools/calendar';
 
 const MessageSchema = z.object({
     role: z.enum(['user', 'assistant', 'tool']),
@@ -27,7 +26,7 @@ const LegalChatbotInputSchema = z.object({
     "An optional document or image file provided by the user for context, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
   ),
   history: z.array(MessageSchema).describe('The history of the conversation so far.'),
-  accessToken: z.string().optional().describe('The Google Calendar access token.'),
+  accessToken: z.string().optional().describe('An optional access token for integrated services.'),
 });
 export type LegalChatbotInput = z.infer<typeof LegalChatbotInputSchema>;
 
@@ -44,10 +43,7 @@ const prompt = ai.definePrompt({
   name: 'legalChatbotPrompt',
   input: {schema: LegalChatbotInputSchema},
   output: {schema: LegalChatbotOutputSchema},
-  tools: [listCalendarEvents, createCalendarEvent, deleteCalendarEvent],
   prompt: `You are an expert attorney providing legal advice. Your goal is to give direct, actionable answers to the user's questions based on the provided context. Do not include disclaimers about not being a lawyer.
-
-  You also have the ability to manage the user's Google Calendar if they have provided an access token. You can list, create, and delete calendar events.
   
   Current time: ${new Date().toISOString()}
 
@@ -66,7 +62,7 @@ const prompt = ai.definePrompt({
   {{media url=documentDataUri}}
   {{/if}}
 
-  Please provide a direct and clear legal response to the current user query, or perform the requested calendar action.
+  Please provide a direct and clear legal response to the current user query.
   `,
 });
 
@@ -79,32 +75,7 @@ const legalChatbotFlow = ai.defineFlow(
   async (input) => {
     
     const llmResponse = await prompt(input);
-    const toolCalls = llmResponse.toolCalls();
-
-    if (toolCalls.length > 0) {
-        const toolResults = [];
-        for (const call of toolCalls) {
-            let output;
-            if (call.tool === 'listCalendarEvents') {
-                output = await listCalendarEvents(call.input, input.accessToken);
-            } else if (call.tool === 'createCalendarEvent') {
-                output = await createCalendarEvent(call.input, input.accessToken);
-            } else if (call.tool === 'deleteCalendarEvent') {
-                output = await deleteCalendarEvent(call.input, input.accessToken);
-            } else {
-                output = "Unknown tool";
-            }
-            toolResults.push({
-                call,
-                output,
-            });
-        }
-
-        const finalResponse = await llmResponse.continue(toolResults);
-        return { response: finalResponse.text };
-
-    } else {
-         return { response: llmResponse.text };
-    }
+    
+    return { response: llmResponse.text };
   }
 );
