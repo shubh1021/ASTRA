@@ -45,7 +45,7 @@ export default function Features() {
             <Link href={feature.href} key={index} className="block">
               <Card className="flex flex-col items-center text-center p-8 bg-background border-2 border-transparent hover:border-primary hover:shadow-2xl transition-all duration-300 h-full transform hover:-translate-y-2">
                 <CardHeader className="p-0">
-                  <div className="bg-primary/10 p-4 rounded-full mb-6 inline-block">
+                  <div className="bg-primary/10 p-4 rounded-full mb-6 inline-flex items-center justify-center h-20 w-20">
                     {feature.icon}
                   </div>
                   <CardTitle className="font-serif text-xl mb-2">{feature.title}</CardTitle>
