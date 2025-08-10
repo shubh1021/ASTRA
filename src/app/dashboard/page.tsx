@@ -394,7 +394,6 @@ export default function DashboardPage() {
                                         </div>
                                     ) : (
                                         <div className="text-center text-muted-foreground text-sm p-4">
-                                            <p>Perform a deep search on legal databases and the web.</p>
                                         </div>
                                     )}
                                 </div>
