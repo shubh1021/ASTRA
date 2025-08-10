@@ -3,10 +3,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Scale } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import Logo from "@/components/logo";
 
 const navLinks = [
   { href: "#features", label: "Features" },
@@ -35,10 +36,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-7xl items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <Scale className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold font-serif text-foreground">
-            Astra
-          </span>
+          <Logo className="h-6" />
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
@@ -68,10 +66,7 @@ export default function Header() {
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between border-b pb-4">
                   <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
-                    <Scale className="h-6 w-6 text-primary" />
-                    <span className="text-xl font-bold font-serif text-foreground">
-                      Astra
-                    </span>
+                    <Logo className="h-6" />
                   </Link>
                   <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>
                       <X className="h-6 w-6" />

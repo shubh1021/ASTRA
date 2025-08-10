@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Scale } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Logo from '@/components/logo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,11 +20,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-secondary p-4">
       <Card className="w-full max-w-md mx-auto shadow-lg">
         <CardHeader className="text-center">
-           <Link href="/" className="flex items-center justify-center gap-2 mb-4">
-              <Scale className="h-8 w-8 text-primary" />
-              <span className="text-3xl font-bold font-serif">
-                Astra
-              </span>
+           <Link href="/" className="flex items-center justify-center mb-4">
+              <Logo className="h-8" />
             </Link>
           <CardTitle className="font-serif text-2xl">Welcome Back</CardTitle>
           <CardDescription>Enter your credentials to access your dashboard.</CardDescription>

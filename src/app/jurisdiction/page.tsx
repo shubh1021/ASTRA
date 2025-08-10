@@ -5,9 +5,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ChevronRight, Scale } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import Logo from '@/components/logo';
 
 const jurisdictions = [
   {
@@ -56,10 +57,7 @@ export default function JurisdictionPage() {
         <Card className="p-8 shadow-lg">
           <div className="mb-8 text-center">
             <Link href="/" className="flex items-center justify-center gap-2 mb-6">
-                <Scale className="h-8 w-8 text-primary" />
-                <span className="text-3xl font-bold font-serif">
-                    Astra
-                </span>
+                <Logo className="h-8" />
             </Link>
             <h1 className="font-serif text-3xl font-bold">Choose your jurisdiction</h1>
             <p className="text-muted-foreground mt-2">Select the legal system you want to work with.</p>

@@ -15,6 +15,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import Logo from '@/components/logo';
 
 export default function DashboardPage() {
   const [documentText, setDocumentText] = useState('');
@@ -99,9 +100,8 @@ export default function DashboardPage() {
     <div className="flex h-screen bg-secondary">
         {/* Sidebar */}
         <nav className="w-64 flex-col border-r bg-background p-4 hidden md:flex">
-            <div className="flex items-center gap-2 mb-8">
-                <Scale className="h-7 w-7 text-primary" />
-                <span className="text-2xl font-bold font-serif">Astra</span>
+            <div className="mb-8">
+                <Logo className="h-7" />
             </div>
             <div className="flex-1 space-y-2">
                 <Button variant="ghost" className="w-full justify-start text-base py-6 bg-secondary">
