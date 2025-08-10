@@ -13,12 +13,12 @@ const AstraIcon = (props: React.SVGProps<SVGSVGElement>) => (
       Minimal Greek pillar / column with capital, fluted shaft, and base
     </desc>
     <g id="capital" transform="translate(0,6)">
-      <rect x="18" y="6" width="124" height="12" rx="4" fill="#0B1E3D" />
-      <rect x="10" y="18" width="140" height="8" rx="3" fill="#0B1E3D" />
-      <rect x="28" y="26" width="104" height="4" rx="2" fill="#123a63" />
+      <rect x="18" y="6" width="124" height="12" rx="4" fill="currentColor" />
+      <rect x="10" y="18" width="140" height="8" rx="3" fill="currentColor" />
+      <rect x="28" y="26" width="104" height="4" rx="2" fill="currentColor" />
     </g>
     <g id="shaft" transform="translate(0,34)">
-      <rect x="36" y="0" width="88" height="110" rx="6" fill="#0B1E3D" />
+      <rect x="36" y="0" width="88" height="110" rx="6" fill="currentColor" />
       <path
         d="M56 6 C58 40, 58 80, 56 104"
         stroke="#ffffff22"
@@ -42,9 +42,9 @@ const AstraIcon = (props: React.SVGProps<SVGSVGElement>) => (
       />
     </g>
     <g id="base" transform="translate(0,146)">
-      <rect x="8" y="0" width="144" height="12" rx="3" fill="#0B1E3D" />
-      <rect x="20" y="12" width="120" height="12" rx="3" fill="#123a63" />
-      <rect x="32" y="24" width="96" height="10" rx="3" fill="#0B1E3D" />
+      <rect x="8" y="0" width="144" height="12" rx="3" fill="currentColor" />
+      <rect x="20" y="12" width="120" height="12" rx="3" fill="currentColor" />
+      <rect x="32" y="24" width="96" height="10" rx="3" fill="currentColor" />
     </g>
     <path
       d="M36 34 h88 v110 h-88 z"
@@ -61,8 +61,8 @@ const AstraIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function Logo({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-2 text-primary", className)}>
-        <AstraIcon className="h-full w-auto"/>
-        <span className="text-2xl font-bold font-serif text-foreground">
+        <AstraIcon className="h-full w-auto text-current"/>
+        <span className="text-2xl font-bold font-serif text-current">
             Astra
         </span>
     </div>
