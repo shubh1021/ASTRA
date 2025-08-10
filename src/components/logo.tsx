@@ -3,14 +3,57 @@ import { cn } from "@/lib/utils";
 const AstraIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="currentColor"
+    viewBox="0 0 160 200"
+    role="img"
+    aria-labelledby="title desc"
     {...props}
   >
-    <path d="M5 22H19V20H5V22Z" />
-    <path d="M6 19H18V9H6V19ZM8 17V11H10V17H8ZM11 17V11H13V17H11ZM14 17V11H16V17H14Z" />
-    <path d="M4 8H20V6H4V8Z" />
-    <path d="M3 5H21V3C21 2.44772 20.5523 2 20 2H4C3.44772 2 3 2.44772 3 3V5Z" />
+    <title id="title">Greek pillar icon</title>
+    <desc id="desc">
+      Minimal Greek pillar / column with capital, fluted shaft, and base
+    </desc>
+    <g id="capital" transform="translate(0,6)">
+      <rect x="18" y="6" width="124" height="12" rx="4" fill="#0B1E3D" />
+      <rect x="10" y="18" width="140" height="8" rx="3" fill="#0B1E3D" />
+      <rect x="28" y="26" width="104" height="4" rx="2" fill="#123a63" />
+    </g>
+    <g id="shaft" transform="translate(0,34)">
+      <rect x="36" y="0" width="88" height="110" rx="6" fill="#0B1E3D" />
+      <path
+        d="M56 6 C58 40, 58 80, 56 104"
+        stroke="#ffffff22"
+        stroke-width="6"
+        fill="none"
+        stroke-linecap="round"
+      />
+      <path
+        d="M80 6 C82 40, 82 80, 80 104"
+        stroke="#ffffff22"
+        stroke-width="6"
+        fill="none"
+        stroke-linecap="round"
+      />
+      <path
+        d="M104 6 C102 40, 102 80, 104 104"
+        stroke="#ffffff22"
+        stroke-width="6"
+        fill="none"
+        stroke-linecap="round"
+      />
+    </g>
+    <g id="base" transform="translate(0,146)">
+      <rect x="8" y="0" width="144" height="12" rx="3" fill="#0B1E3D" />
+      <rect x="20" y="12" width="120" height="12" rx="3" fill="#123a63" />
+      <rect x="32" y="24" width="96" height="10" rx="3" fill="#0B1E3D" />
+    </g>
+    <path
+      d="M36 34 h88 v110 h-88 z"
+      fill="none"
+      stroke="#071428"
+      stroke-opacity="0.12"
+      stroke-width="2"
+      rx="6"
+    />
   </svg>
 );
 
