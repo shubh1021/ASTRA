@@ -16,6 +16,9 @@ import Groq from 'groq-sdk';
 // Input Schema
 const DeepSearchInputSchema = z.object({
   query: z.string().describe('The legal query to search for.'),
+  documentDataUri: z.string().optional().describe(
+    "An optional document or image file, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+  ),
 });
 export type DeepSearchInput = z.infer<typeof DeepSearchInputSchema>;
 
@@ -87,8 +90,13 @@ const deepSearchFlow = ai.defineFlow(
         apiKey: process.env.GROQ_API_KEY
     });
 
+    const documentContext = input.documentDataUri 
+        ? `The user has provided the following document for additional context: ${input.documentDataUri.startsWith('data:image') ? 'An image is attached.' : 'A text document is attached.'}\n\n`
+        : '';
+
     const prompt = `You are a legal research assistant. Analyze the following search results for the query: "${input.query}".
     
+    ${documentContext}
     Provide a concise summary, a list of key points, and the top 5 most relevant source URLs.
     
     Search Results:
@@ -105,6 +113,14 @@ const deepSearchFlow = ai.defineFlow(
     }
     `;
     
+    const messages: any = [{ role: 'user', content: prompt }];
+    if (input.documentDataUri) {
+        messages[0].content = [
+            { type: "text", text: prompt },
+        ];
+    }
+
+
     const chatCompletion = await groq.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
         model: 'llama3-8b-8192', // Or another suitable model
