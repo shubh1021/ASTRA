@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { optimizationAssistant, OptimizationAssistantOutput } from '@/ai/flows/optimization-assistant';
 import { getLawyers, resetAssignments, Lawyer } from '@/services/optimization';
-import { Loader2, Zap, Upload, AlertTriangle, FileText, X, RefreshCw } from 'lucide-react';
+import { Loader2, Zap, Upload, AlertTriangle, FileText, X, RefreshCw, Search, UserCheck } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 interface FileWithContent {
   id: string;
@@ -25,6 +26,9 @@ export default function OptimizationAssistantPage() {
   const [isResetting, setIsResetting] = useState(false);
   const [optimizationResult, setOptimizationResult] = useState<OptimizationAssistantOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [lawyerSearch, setLawyerSearch] = useState('');
+  const [searchedLawyer, setSearchedLawyer] = useState<Lawyer | null | undefined>(undefined);
 
   const fetchLawyerData = async () => {
     try {
@@ -115,6 +119,7 @@ export default function OptimizationAssistantPage() {
         await resetAssignments();
         await fetchLawyerData(); // Refresh lawyer data to show reset loads
         setOptimizationResult(null); // Clear previous results
+        setSearchedLawyer(undefined); // Clear search result
     } catch (e) {
         setError("Failed to reset assignments.");
         console.error(e);
@@ -123,45 +128,81 @@ export default function OptimizationAssistantPage() {
     }
   }
 
+  const handleLawyerSearch = () => {
+    if (!lawyerSearch.trim()) {
+        setSearchedLawyer(undefined);
+        return;
+    }
+    const found = lawyers.find(l => l.name.toLowerCase() === lawyerSearch.trim().toLowerCase());
+    setSearchedLawyer(found || null);
+  }
+
   return (
     <main className="flex flex-col h-full bg-secondary p-4 md:p-8 space-y-8">
       {/* Lawyer Status Card */}
       <Card className="shadow-lg">
-          <CardHeader className="flex-row justify-between items-center">
+          <CardHeader className="flex-row justify-between items-start">
               <div>
                 <CardTitle className="font-serif text-xl flex items-center gap-3">
                     Lawyer Workload
                 </CardTitle>
                 <CardDescription>
-                    Current document assignments for all lawyers.
+                    Enter a lawyer's name to view their current document assignments.
                 </CardDescription>
               </div>
               <Button onClick={handleReset} disabled={isResetting} variant="outline" size="sm">
                   {isResetting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                  Reset Assignments
+                  Reset All Assignments
               </Button>
           </CardHeader>
-          <CardContent>
-              <Table>
-                  <TableHeader>
-                      <TableRow>
-                          <TableHead>Lawyer</TableHead>
-                          <TableHead>Expertise</TableHead>
-                          <TableHead className="text-right">Assigned Documents</TableHead>
-                      </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                      {lawyers.map(lawyer => (
-                          <TableRow key={lawyer.id}>
-                              <TableCell className="font-medium">{lawyer.name}</TableCell>
-                              <TableCell className="space-x-1">
-                                  {Array.from(lawyer.expertise).map(ex => <Badge key={ex} variant="secondary">{ex.replace('_', ' ')}</Badge>)}
-                              </TableCell>
-                              <TableCell className="text-right font-bold text-lg">{lawyer.assigned_docs}</TableCell>
-                          </TableRow>
-                      ))}
-                  </TableBody>
-              </Table>
+          <CardContent className="space-y-4">
+              <div className="flex w-full max-w-sm items-center space-x-2">
+                  <Input 
+                    type="text" 
+                    placeholder="Lawyer's name..."
+                    value={lawyerSearch}
+                    onChange={(e) => setLawyerSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleLawyerSearch()}
+                    />
+                  <Button type="button" onClick={handleLawyerSearch}>
+                      <Search className="mr-2 h-4 w-4" /> Search
+                  </Button>
+              </div>
+
+              {searchedLawyer === undefined && (
+                  <div className="text-center text-muted-foreground text-sm py-8">
+                      <p>Search for a lawyer to see their workload.</p>
+                  </div>
+              )}
+
+              {searchedLawyer === null && (
+                   <Alert variant="destructive" className="max-w-sm">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>Not Found</AlertTitle>
+                      <AlertDescription>No lawyer found with that name.</AlertDescription>
+                  </Alert>
+              )}
+
+              {searchedLawyer && (
+                  <Card className="max-w-sm bg-background">
+                      <CardHeader>
+                          <CardTitle className="flex items-center gap-3">
+                              <UserCheck /> {searchedLawyer.name}
+                          </CardTitle>
+                          <CardDescription>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                                {Array.from(searchedLawyer.expertise).map(ex => <Badge key={ex} variant="secondary">{ex.replace('_', ' ')}</Badge>)}
+                            </div>
+                          </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                          <div className="text-sm">
+                              <span className="text-muted-foreground">Currently Assigned Documents:</span>
+                              <p className="font-bold text-4xl">{searchedLawyer.assigned_docs}</p>
+                          </div>
+                      </CardContent>
+                  </Card>
+              )}
           </CardContent>
       </Card>
       
