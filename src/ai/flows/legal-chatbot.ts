@@ -35,13 +35,13 @@ const LegalChatbotOutputSchema = z.object({
 export type LegalChatbotOutput = z.infer<typeof LegalChatbotOutputSchema>;
 
 export async function legalChatbot(input: LegalChatbotInput): Promise<LegalChatbotOutput> {
-  return legalChatbotFlow(input);
+  const response = await legalChatbotFlow(input);
+  return { response };
 }
 
 const prompt = ai.definePrompt({
   name: 'legalChatbotPrompt',
   input: {schema: LegalChatbotInputSchema},
-  output: {schema: LegalChatbotOutputSchema},
   prompt: `You are an expert attorney providing legal advice. Your goal is to give direct, actionable answers to the user's questions based on the provided context. Do not include disclaimers about not being a lawyer.
   
   Current time: ${new Date().toISOString()}
@@ -69,12 +69,12 @@ const legalChatbotFlow = ai.defineFlow(
   {
     name: 'legalChatbotFlow',
     inputSchema: LegalChatbotInputSchema,
-    outputSchema: LegalChatbotOutputSchema,
+    outputSchema: z.string(),
   },
   async (input) => {
     
     const llmResponse = await prompt(input);
     
-    return { response: llmResponse.text };
+    return llmResponse.text;
   }
 );
