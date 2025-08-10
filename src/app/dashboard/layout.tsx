@@ -43,10 +43,10 @@ export default function DashboardLayout({
   };
 
   const navItems = [
-    { href: '/dashboard', label: 'Document Analysis', icon: FileIcon },
-    { href: '/dashboard/deep-search', label: 'DeepSearch', icon: Search },
-    { href: '/dashboard/legal-chatbot', label: 'Legal Question', icon: BrainCircuit },
-    { href: '/dashboard/optimization-assistant', label: 'Optimization', icon: Zap },
+    { href: '/dashboard', label: 'Document Analysis', description: "Review and analyze documents", icon: FileIcon },
+    { href: '/dashboard/deep-search', label: 'DeepSearch', description: "Search across legal databases", icon: Search },
+    { href: '/dashboard/legal-chatbot', label: 'Legal Question', description: "Ask context-aware questions", icon: BrainCircuit },
+    { href: '/dashboard/optimization-assistant', label: 'Optimization', description: "Optimize clause language", icon: Zap },
   ];
 
   return (
@@ -67,12 +67,15 @@ export default function DashboardLayout({
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start text-base py-6",
+                  "w-full justify-start items-start text-base py-6 h-auto",
                   pathname === item.href && "bg-secondary"
                 )}
               >
-                <item.icon className="mr-3 h-5 w-5"/>
-                {item.label}
+                <item.icon className="mr-3 h-5 w-5 mt-1 flex-shrink-0"/>
+                <div className="flex flex-col items-start text-left">
+                  <span>{item.label}</span>
+                  <span className="text-xs text-muted-foreground font-normal">{item.description}</span>
+                </div>
               </Button>
             </Link>
           ))}
