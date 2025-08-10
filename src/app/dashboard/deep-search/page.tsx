@@ -4,10 +4,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { deepSearch, DeepSearchOutput } from '@/ai/flows/deep-search';
-import { Loader2, Search, FileUp, X, File as FileIcon } from 'lucide-react';
+import { Loader2, Search, FileUp, X, File as FileIcon, Link as LinkIcon, FileText } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -65,11 +65,12 @@ export default function DeepSearchPage() {
         reader.onloadend = () => {
             const dataUri = reader.result as string;
             setFilePreview(dataUri);
+            // Automatically trigger search when file is uploaded
             handleSearch(query, dataUri); 
         };
         reader.readAsDataURL(uploadedFile);
     }
-  }, [query]);
+  }, [query]); // Re-create onDrop if query changes
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop,
@@ -84,7 +85,8 @@ export default function DeepSearchPage() {
   const removeFile = () => {
     setFile(null);
     setFilePreview(null);
-    setSearchResult(null);
+    // Optionally clear results when file is removed
+    // setSearchResult(null); 
     setError(null);
   }
 
@@ -96,13 +98,16 @@ export default function DeepSearchPage() {
             <Search className="h-6 w-6" />
             Intelligent DeepSearch
           </CardTitle>
+          <CardDescription>
+            Find relevant legal clauses from across the web. Upload a document for context or enter a query to begin.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-4 mb-6">
-            <div {...getRootProps()} className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer ${isDragActive ? 'border-primary' : 'border-border'}`}>
+            <div {...getRootProps()} className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
                 <input {...getInputProps()} />
                 <FileUp className="h-10 w-10 text-muted-foreground mb-2" />
-                <p className="text-muted-foreground text-sm">Drag & drop a file here to analyze, or enter a query below.</p>
+                <p className="text-muted-foreground text-sm">Drag & drop a file to automatically analyze, or enter a query below.</p>
                 <p className="text-xs text-muted-foreground mt-1">Images, PDF, or .txt files supported</p>
             </div>
 
@@ -126,7 +131,7 @@ export default function DeepSearchPage() {
             <div className="flex gap-2">
                 <Input
                 type="text"
-                placeholder="Optionally, add a query to refine your search..."
+                placeholder="Enter a legal topic to find related clauses..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -155,37 +160,37 @@ export default function DeepSearchPage() {
           {isSearching && (
              <div className="text-center text-muted-foreground py-10 flex flex-col items-center gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p>Performing DeepSearch...</p>
+              <p className="font-serif">Performing DeepSearch for related clauses...</p>
             </div>
           )}
 
           {searchResult && (
             <div className="space-y-6 mt-6">
-              <div>
-                <h3 className="font-semibold text-lg mb-2 font-serif">Summary</h3>
-                <p className="text-muted-foreground">{searchResult.summary}</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-2 font-serif">Key Points</h3>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  {searchResult.keyPoints.map((point, index) => (
-                    <li key={index}>{point}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-2 font-serif">Sources</h3>
-                <div className="space-y-2">
-                  {searchResult.sources.map((source, index) => (
-                    <Card key={index} className="p-3 bg-secondary">
-                      <Link href={source.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
-                        {source.title}
-                      </Link>
-                      <p className="text-xs text-muted-foreground truncate">{source.url}</p>
+              <h3 className="font-semibold text-xl mb-2 font-serif">Discovered Clauses</h3>
+              {searchResult.relatedClauses.length > 0 ? (
+                <div className="space-y-4">
+                  {searchResult.relatedClauses.map((clause, index) => (
+                    <Card key={index} className="p-4 bg-secondary">
+                      <blockquote className="border-l-4 border-primary pl-4 mb-3">
+                        <p className="text-sm italic">"{clause.clauseText}"</p>
+                      </blockquote>
+                      <p className="text-xs text-muted-foreground mb-3"><strong className="text-foreground font-medium">Relevance:</strong> {clause.relevance}</p>
+                      <div className="flex items-center gap-2 text-xs">
+                          <LinkIcon className="h-3 w-3 text-primary"/>
+                          <Link href={clause.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium truncate">
+                            {clause.sourceTitle}
+                          </Link>
+                      </div>
                     </Card>
                   ))}
                 </div>
-              </div>
+              ) : (
+                <div className="text-center text-muted-foreground py-10 flex flex-col items-center gap-4">
+                    <FileText className="h-10 w-10 text-primary/50" />
+                    <p className="font-serif">No relevant clauses found.</p>
+                    <p className="text-sm">Try refining your search query or uploading a different document.</p>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
