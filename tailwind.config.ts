@@ -17,7 +17,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['var(--font-inter)'],
+        sans: ['var(--font-ibm-plex-sans)'],
         serif: ['var(--font-source-serif-4)'],
       },
       colors: {

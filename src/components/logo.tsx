@@ -11,7 +11,13 @@ const AstraIcon = (props: React.SVGProps<SVGSVGElement>) => (
         strokeLinejoin="round"
         {...props}
     >
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+       <path d="M4 22h16" />
+       <path d="M6 18h12" />
+       <path d="M6 15h12" />
+       <path d="M6 12h12" />
+       <path d="M6 9h12" />
+       <path d="M6 6h12" />
+       <path d="M6 3h12" />
     </svg>
 );
 
