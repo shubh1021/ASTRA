@@ -149,13 +149,14 @@ export default function DashboardPage() {
 
     const newMessages: AssistantMessage[] = [...assistantMessages, { role: 'user', content: assistantQuery }];
     setAssistantMessages(newMessages);
+    const currentQuery = assistantQuery;
     setAssistantQuery('');
     setIsAssistantLoading(true);
     scrollToAssistantBottom();
     
     try {
         const result = await legalChatbot({
-            query: assistantQuery,
+            query: currentQuery,
             history: newMessages.slice(0, -1), // Send history without the current query
             documentDataUri: `data:text/plain;base64,${btoa(documentText)}`,
         });
