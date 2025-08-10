@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview An AI flow to identify the legal domain of a document.
+ * @fileOverview An AI flow to identify the legal domain of one or more documents.
  *
  * - identifyDocumentDomain - A function that analyzes document text and returns its legal domain.
  * - IdentifyDocumentDomainInput - The input type for the identifyDocumentDomain function.
@@ -16,17 +16,25 @@ const POSSIBLE_DOMAINS = [
 ] as const;
 
 
+const DocumentContentSchema = z.object({
+  id: z.union([z.string(), z.number()]),
+  text: z.string().describe('The text content of the legal document to analyze.'),
+});
+
 const IdentifyDocumentDomainInputSchema = z.object({
-  documentText: z
-    .string()
-    .describe('The text content of the legal document to analyze.'),
+  documents: z.array(DocumentContentSchema)
 });
 export type IdentifyDocumentDomainInput = z.infer<typeof IdentifyDocumentDomainInputSchema>;
 
+const IdentifiedDomainSchema = z.object({
+    documentId: z.union([z.string(), z.number()]),
+    domain: z
+        .enum(POSSIBLE_DOMAINS)
+        .describe('The identified legal domain of the document.'),
+});
+
 const IdentifyDocumentDomainOutputSchema = z.object({
-  domain: z
-    .enum(POSSIBLE_DOMAINS)
-    .describe('The identified legal domain of the document.'),
+  results: z.array(IdentifiedDomainSchema)
 });
 export type IdentifyDocumentDomainOutput = z.infer<typeof IdentifyDocumentDomainOutputSchema>;
 
@@ -38,16 +46,19 @@ const prompt = ai.definePrompt({
   name: 'identifyDocumentDomainPrompt',
   input: {schema: IdentifyDocumentDomainInputSchema},
   output: {schema: IdentifyDocumentDomainOutputSchema},
-  prompt: `You are an AI legal assistant specializing in classifying legal documents. Analyze the following document text and identify its primary legal domain.
+  prompt: `You are an AI legal assistant specializing in classifying legal documents. For each document provided below, analyze its text and identify its primary legal domain.
   
-  The domain must be one of the following exact values: ${POSSIBLE_DOMAINS.join(", ")}.
+  The domain for each document must be one of the following exact values: ${POSSIBLE_DOMAINS.join(", ")}.
 
-  Document Text: 
+  Documents:
+  {{#each documents}}
   ---
-  {{{documentText}}}
+  Document ID: {{id}}
+  Text: {{{text}}}
   ---
+  {{/each}}
 
-  Based on the text, determine the most appropriate domain.
+  Based on the text of each document, determine the most appropriate domain and return the results as an array of objects, each with a 'documentId' and its identified 'domain'.
   `,
 });
 

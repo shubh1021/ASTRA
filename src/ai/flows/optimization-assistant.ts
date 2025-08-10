@@ -12,21 +12,25 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { identifyDocumentDomain } from './identify-document-domain';
-import { processDocuments, AssignmentResult } from '@/services/optimization';
+import { processDocuments, Document, AssignmentResult } from '@/services/optimization';
 
 
 const OptimizationAssistantInputSchema = z.object({
-  documentText: z.string().describe('The text content of the legal document to analyze and assign.'),
+    documents: z.array(z.object({
+        id: z.union([z.string(), z.number()]),
+        text: z.string().describe('The text content of the legal document to analyze.'),
+    })).describe('A list of documents to analyze and assign.'),
 });
 export type OptimizationAssistantInput = z.infer<typeof OptimizationAssistantInputSchema>;
 
 
 const OptimizationAssistantOutputSchema = z.object({
-    assignment: z.object({
+    assignments: z.array(z.object({
+        fileName: z.string().describe("The name of the original file."),
         docDomain: z.string().describe('The identified legal domain of the document.'),
         lawyerName: z.string().describe('The name of the lawyer the document was assigned to.'),
         newLoad: z.number().describe("The assigned lawyer's new total number of documents."),
-    })
+    })),
 });
 export type OptimizationAssistantOutput = z.infer<typeof OptimizationAssistantOutputSchema>;
 
@@ -43,20 +47,32 @@ const optimizationAssistantFlow = ai.defineFlow(
     outputSchema: OptimizationAssistantOutputSchema,
   },
   async (input) => {
-    // Step 1: Identify the document's domain using another AI flow.
-    const { domain } = await identifyDocumentDomain({ documentText: input.documentText });
+    // Step 1: Identify the domain for all documents in the batch.
+    const domainResults = await identifyDocumentDomain({ documents: input.documents.map(d => ({id: d.id, text: d.text})) });
 
-    // Step 2: Use the identified domain to process the assignment.
-    // The processDocuments service contains the core logic for assigning to a lawyer.
-    const { results } = await processDocuments([{ id: 1, domain }]);
+    const documentsToProcess: Document[] = domainResults.results.map(result => ({
+        id: result.documentId as number, // Assuming numeric IDs from the front-end
+        domain: result.domain,
+    }));
+
+    // Step 2: Use the identified domains to process the assignments.
+    const { results } = await processDocuments(documentsToProcess);
 
     if (results.length === 0) {
-      throw new Error(`Could not assign document. No lawyer found for the identified domain: ${domain}`);
+      throw new Error(`Could not assign documents. No lawyers found for the identified domains.`);
     }
     
-    // Step 3: Return the successful assignment.
+    // Step 3: Map results back to original file names and return.
+    const finalAssignments = results.map(res => {
+        const originalDoc = input.documents.find(d => d.id.toString() === res.docId.toString());
+        return {
+            ...res,
+            fileName: originalDoc?.id.toString() || 'Unknown File' // Use file name as ID from client
+        }
+    });
+
     return {
-        assignment: results[0],
+        assignments: finalAssignments,
     };
   }
 );

@@ -9,12 +9,20 @@ export interface Lawyer {
 }
 
 export interface Document {
-  id: number;
+  id: number | string;
   domain: string;
 }
 
-// Initial data, can be extended
-const initialLawyers: Lawyer[] = [
+export interface AssignmentResult {
+    docId: number | string;
+    docDomain: string;
+    lawyerName: string;
+    newLoad: number;
+}
+
+
+// In-memory state for lawyers. This will persist for the server's lifetime.
+let lawyers: Lawyer[] = [
     { id: 1, name: "Alice", expertise: new Set(["corporate", "tax"]), assigned_docs: 0 },
     { id: 2, name: "Bob", expertise: new Set(["ip", "litigation"]), assigned_docs: 0 },
     { id: 3, name: "Charlie", expertise: new Set(["family", "real_estate"]), assigned_docs: 0 },
@@ -23,34 +31,34 @@ const initialLawyers: Lawyer[] = [
     { id: 6, name: "Frank", expertise: new Set(["corporate", "family"]), assigned_docs: 0 },
 ];
 
+/**
+ * Retrieves the current state of all lawyers.
+ */
 export async function getLawyers(): Promise<Lawyer[]> {
-    return JSON.parse(JSON.stringify(initialLawyers)).map((l: any) => ({...l, expertise: new Set(l.expertise)}));
+    // Return a deep copy to avoid direct mutation of the state from outside
+    return JSON.parse(JSON.stringify(lawyers)).map((l: any) => ({...l, expertise: new Set(l.expertise)}));
+}
+
+/**
+ * Resets all lawyer assignments to zero.
+ */
+export async function resetAssignments(): Promise<void> {
+    lawyers.forEach(l => l.assigned_docs = 0);
 }
 
 
-export interface AssignmentResult {
-    docDomain: string;
-    lawyerName: string;
-    newLoad: number;
-}
-
-
-// --- Single Document Assignment ---
-function assignDocument(docDomain: string, currentLawyers: Lawyer[]): { lawyerId: number | null; updatedLawyers: Lawyer[] } {
-    const eligible = currentLawyers.filter(lw => lw.expertise.has(docDomain));
+// --- Single Document Assignment (Used within batch processing as a fallback) ---
+function assignSingleDocument(doc: Document, currentLawyers: Lawyer[]): number | null {
+    const eligible = currentLawyers.filter(lw => lw.expertise.has(doc.domain));
     if (eligible.length === 0) {
-        return { lawyerId: null, updatedLawyers: currentLawyers };
+        return null;
     }
     
     const minDocs = Math.min(...eligible.map(lw => lw.assigned_docs));
     const leastLoaded = eligible.filter(lw => lw.assigned_docs === minDocs);
     const chosen = leastLoaded[Math.floor(Math.random() * leastLoaded.length)];
     
-    const updatedLawyers = currentLawyers.map(lw => 
-        lw.id === chosen.id ? { ...lw, assigned_docs: lw.assigned_docs + 1 } : lw
-    );
-
-    return { lawyerId: chosen.id, updatedLawyers };
+    return chosen.id;
 }
 
 // --- Genetic Algorithm for Batch Assignment ---
@@ -85,6 +93,7 @@ class GAAssign {
             if (allowedLawyers && allowedLawyers.length > 0) {
                 return allowedLawyers[Math.floor(Math.random() * allowedLawyers.length)];
             }
+            // Fallback for documents with no eligible lawyer
             return Math.floor(Math.random() * this.num_lawyers);
         });
     }
@@ -94,11 +103,12 @@ class GAAssign {
         let penalty = 0;
         genome.forEach((lw_idx, i) => {
             if (!this.allowed[i].includes(lw_idx)) {
-                penalty += 1000;
+                penalty += 1000; // Heavy penalty for assigning to a non-expert
             }
             loads[lw_idx] += 1;
         });
-        return Math.max(...loads) + penalty;
+        const loadVariance = loads.reduce((acc, val) => acc + (val - (loads.reduce((s, v) => s + v, 0) / loads.length)) ** 2, 0) / loads.length;
+        return Math.max(...loads) + loadVariance + penalty;
     }
 
     private mutate(genome: number[]): void {
@@ -125,10 +135,11 @@ class GAAssign {
             new_pop.push(popFitnessSorted[0].g); // Elitism
 
             while (new_pop.length < this.pop_size) {
-                const [parent1, parent2] = [
-                    popFitnessSorted[Math.floor(Math.random() * 20)].g,
-                    popFitnessSorted[Math.floor(Math.random() * 20)].g
-                ];
+                // Tournament selection
+                const tournament = popFitnessSorted.slice(0, 20);
+                const parent1 = tournament[Math.floor(Math.random() * tournament.length)].g;
+                const parent2 = tournament[Math.floor(Math.random() * tournament.length)].g;
+
                 const cut = Math.floor(Math.random() * (this.num_docs - 1)) + 1;
                 const child = [...parent1.slice(0, cut), ...parent2.slice(cut)];
                 this.mutate(child);
@@ -147,49 +158,46 @@ class GAAssign {
 // --- Main Processing Function ---
 export async function processDocuments(
     docList: Document[]
-): Promise<{ results: AssignmentResult[]; finalLoads: Lawyer[] }> {
-    // Reset lawyer loads for each run to ensure idempotency
-    let currentLawyers: Lawyer[] = [
-        { id: 1, name: "Alice", expertise: new Set(["corporate", "tax"]), assigned_docs: 0 },
-        { id: 2, name: "Bob", expertise: new Set(["ip", "litigation"]), assigned_docs: 0 },
-        { id: 3, name: "Charlie", expertise: new Set(["family", "real_estate"]), assigned_docs: 0 },
-        { id: 4, name: "Diana", expertise: new Set(["corporate", "litigation"]), assigned_docs: 0 },
-        { id: 5, name: "Eve", expertise: new Set(["environment", "tax"]), assigned_docs: 0 },
-        { id: 6, name: "Frank", expertise: new Set(["corporate", "family"]), assigned_docs: 0 },
-    ];
-    
+): Promise<{ results: AssignmentResult[] }> {
     const results: AssignmentResult[] = [];
+    
+    // Create a deep copy of lawyers to simulate the assignments without modifying the actual state yet
+    const simulationLawyers = JSON.parse(JSON.stringify(lawyers)).map((l: any) => ({...l, expertise: new Set(l.expertise)}));
+
+    let finalAssignments: { docId: string | number, lawyerId: number }[] = [];
 
     if (docList.length === 1) {
-        const { lawyerId, updatedLawyers } = assignDocument(docList[0].domain, currentLawyers);
-        currentLawyers = updatedLawyers;
+        const doc = docList[0];
+        const lawyerId = assignSingleDocument(doc, simulationLawyers);
         if (lawyerId !== null) {
-            const lawyer = currentLawyers.find(l => l.id === lawyerId)!;
-            results.push({
-                docDomain: docList[0].domain,
-                lawyerName: lawyer.name,
-                newLoad: lawyer.assigned_docs,
-            });
+            finalAssignments.push({ docId: doc.id, lawyerId });
         }
     } else if (docList.length > 1) {
-        const ga = new GAAssign(currentLawyers, docList);
+        const ga = new GAAssign(simulationLawyers, docList);
         const bestAssignment = ga.run();
         
-        for (let i = 0; i < bestAssignment.length; i++) {
-            const doc = docList[i];
-            const lawyerIndex = bestAssignment[i];
-            const chosenLawyer = currentLawyers[lawyerIndex];
-
-            if (chosenLawyer) {
-                chosenLawyer.assigned_docs += 1;
-                results.push({
-                    docDomain: doc.domain,
-                    lawyerName: chosenLawyer.name,
-                    newLoad: chosenLawyer.assigned_docs,
-                });
-            }
-        }
+        bestAssignment.forEach((lawyerIndex, docIndex) => {
+            const lawyer = simulationLawyers[lawyerIndex];
+            finalAssignments.push({ docId: docList[docIndex].id, lawyerId: lawyer.id });
+        });
     }
 
-    return { results, finalLoads: currentLawyers };
+    // Now, apply the assignments to the actual stateful `lawyers` array
+    finalAssignments.forEach(assignment => {
+        const lawyerToUpdate = lawyers.find(l => l.id === assignment.lawyerId);
+        const doc = docList.find(d => d.id === assignment.docId);
+
+        if (lawyerToUpdate && doc) {
+            lawyerToUpdate.assigned_docs += 1;
+            results.push({
+                docId: doc.id,
+                docDomain: doc.domain,
+                lawyerName: lawyerToUpdate.name,
+                newLoad: lawyerToUpdate.assigned_docs,
+            });
+        }
+    });
+
+
+    return { results };
 }
