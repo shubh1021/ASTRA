@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { analyzeLegalClauses, AnalyzeLegalClausesOutput } from '@/ai/flows/analyze-legal-clauses';
 import { redactSensitiveData, RedactSensitiveDataOutput } from '@/ai/flows/redact-sensitive-data';
-import { Loader2, ShieldCheck, FileCode, Bot, Globe, ArrowLeft, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send, Settings, User, LogOut, Scale, File as FileIcon } from 'lucide-react';
+import { deepSearch, DeepSearchOutput } from '@/ai/flows/deep-search';
+import { Loader2, ShieldCheck, FileCode, Bot, Globe, ArrowLeft, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send, Settings, User, LogOut, Scale, File as FileIcon, Link as LinkIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -16,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Logo from '@/components/logo';
+import { Input } from '@/components/ui/input';
 
 export default function DashboardPage() {
   const [documentText, setDocumentText] = useState('');
@@ -24,6 +26,10 @@ export default function DashboardPage() {
   const [analysisResult, setAnalysisResult] = useState<AnalyzeLegalClausesOutput | null>(null);
   const [redactionResult, setRedactionResult] = useState<RedactSensitiveDataOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [deepSearchQuery, setDeepSearchQuery] = useState('');
+  const [isDeepSearching, setIsDeepSearching] = useState(false);
+  const [deepSearchResult, setDeepSearchResult] = useState<DeepSearchOutput | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -49,13 +55,13 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({ 
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     noClick: true,
     noKeyboard: true,
     accept: {
         'text/plain': ['.txt'],
-    } 
+    }
   });
 
   const handleAnalyze = async (text: string) => {
@@ -82,7 +88,22 @@ export default function DashboardPage() {
       setIsLoading(false);
     }
   };
-  
+
+  const handleDeepSearch = async () => {
+    if (!deepSearchQuery.trim()) return;
+    setIsDeepSearching(true);
+    setDeepSearchResult(null);
+    try {
+        const result = await deepSearch({ query: deepSearchQuery });
+        setDeepSearchResult(result);
+    } catch (e) {
+        setError('DeepSearch failed. Please try again.');
+        console.error(e);
+    } finally {
+        setIsDeepSearching(false);
+    }
+  };
+
   const getRiskColor = (riskLevel: 'low' | 'medium' | 'high') => {
     switch (riskLevel) {
       case 'low':
@@ -194,7 +215,7 @@ export default function DashboardPage() {
               </ScrollArea>
             </CardContent>
           </Card>
-          
+
           {/* AI Tools Panel */}
           <div className="md:col-span-1 flex flex-col min-h-0">
              <ScrollArea className="flex-grow">
@@ -267,17 +288,62 @@ export default function DashboardPage() {
                     </Card>
 
                     <Card className="shadow-sm">
-                    <AccordionItem value="deepsearch" className="border-none">
-                        <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
-                            <div className="flex items-center gap-3">
-                                <Globe className="h-5 w-5" /> DeepSearch
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-4 pb-4">
-                            <div className="text-center text-muted-foreground text-sm p-4">
-                            <p>DeepSearch functionality will be available soon.</p>
-                            </div>
-                        </AccordionContent>
+                        <AccordionItem value="deepsearch" className="border-none">
+                            <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
+                                <div className="flex items-center gap-3">
+                                    <Globe className="h-5 w-5" /> DeepSearch
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="px-4 pb-4">
+                                <div className="space-y-4">
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder="Enter a legal query..."
+                                            value={deepSearchQuery}
+                                            onChange={(e) => setDeepSearchQuery(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleDeepSearch()}
+                                        />
+                                        <Button onClick={handleDeepSearch} disabled={isDeepSearching}>
+                                            {isDeepSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                                        </Button>
+                                    </div>
+                                    {isDeepSearching ? (
+                                        <div className="flex items-center justify-center p-4">
+                                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                        </div>
+                                    ) : deepSearchResult ? (
+                                        <div className="space-y-4">
+                                            <div>
+                                                <h4 className="font-semibold mb-2">Summary</h4>
+                                                <p className="text-xs text-muted-foreground">{deepSearchResult.summary}</p>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold mb-2">Key Points</h4>
+                                                <ul className="space-y-1 list-disc list-inside text-xs text-muted-foreground">
+                                                    {deepSearchResult.keyPoints.map((point, i) => <li key={i}>{point}</li>)}
+                                                </ul>
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold mb-2">Sources</h4>
+                                                <div className="space-y-2">
+                                                    {deepSearchResult.sources.map((source, i) => (
+                                                        <a href={source.url} target="_blank" rel="noopener noreferrer" key={i} className="block p-2 border rounded-md bg-secondary hover:bg-muted transition-colors">
+                                                            <div className="flex items-center gap-2">
+                                                                <LinkIcon className="h-3 w-3" />
+                                                                <p className="text-xs font-semibold truncate">{source.title}</p>
+                                                            </div>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center text-muted-foreground text-sm p-4">
+                                            <p>Perform a deep search on legal databases and the web.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </AccordionContent>
                         </AccordionItem>
                     </Card>
                     </Accordion>
