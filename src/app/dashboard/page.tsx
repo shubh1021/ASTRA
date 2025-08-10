@@ -6,19 +6,14 @@ import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { analyzeLegalClauses, AnalyzeLegalClausesOutput } from '@/ai/flows/analyze-legal-clauses';
-import { redactSensitiveData, RedactSensitiveDataOutput } from '@/ai/flows/redact-sensitive-data';
 import { legalChatbot } from '@/ai/flows/legal-chatbot';
-import { identifyDocumentDomain } from '@/ai/flows/identify-document-domain';
-import { processDocuments, AssignmentResult, getLawyers, Lawyer } from '@/services/optimization';
-import { Loader2, ShieldCheck, FileCode, Bot, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send, Zap } from 'lucide-react';
+import { Loader2, FileCode, Bot, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRouter } from 'next/navigation';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
 
 interface AssistantMessage {
     role: 'user' | 'assistant';
@@ -30,14 +25,13 @@ export default function DashboardPage() {
   const [fileName, setFileName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalyzeLegalClausesOutput | null>(null);
-  const [redactionResult, setRedactionResult] = useState<RedactSensitiveDataOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [assistantQuery, setAssistantQuery] = useState('');
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([
       { role: 'assistant', content: "I'm here to help with questions about your document. Ask me anything!" }
   ]);
-    const [activeAccordionItems, setActiveAccordionItems] = useState(["analysis", "redaction", "optimization"]);
+  const [activeAccordionItems, setActiveAccordionItems] = useState(["analysis"]);
   const router = useRouter();
 
   const [panelsWidth, setPanelsWidth] = useState({ left: 66, right: 34 });
@@ -47,11 +41,6 @@ export default function DashboardPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const rightPanelRef = useRef<HTMLDivElement>(null);
   const assistantScrollAreaRef = useRef<HTMLDivElement>(null);
-
-  // Optimization state
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [optimizationResult, setOptimizationResult] = useState<AssignmentResult | null>(null);
-
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -64,7 +53,6 @@ export default function DashboardPage() {
           setDocumentText(text);
           setError(null);
           handleAnalyze(text);
-          setOptimizationResult(null); // Reset optimization on new doc
         };
         reader.onerror = () => {
           setError('Failed to read the file. Please try another file.');
@@ -95,16 +83,10 @@ export default function DashboardPage() {
     setIsLoading(true);
     setError(null);
     setAnalysisResult(null);
-    setRedactionResult(null);
 
     try {
-        const analysisPromise = analyzeLegalClauses({ documentText: text });
-        const redactionPromise = redactSensitiveData({ documentText: text });
-
-        const [analysis, redaction] = await Promise.all([analysisPromise, redactionPromise]);
-        
+        const analysis = await analyzeLegalClauses({ documentText: text });
         setAnalysisResult(analysis);
-        setRedactionResult(redaction);
 
     } catch (e) {
       setError('An error occurred during analysis. Please try again.');
@@ -112,34 +94,6 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleOptimize = async () => {
-      if (!documentText) return;
-
-      setIsOptimizing(true);
-      setOptimizationResult(null);
-      setError(null);
-      
-      try {
-          // 1. Identify domain
-          const { domain } = await identifyDocumentDomain({ documentText });
-
-          // 2. Process assignment
-          const { results } = await processDocuments([{ id: 1, domain }]);
-
-          if (results.length > 0) {
-              setOptimizationResult(results[0]);
-          } else {
-              setError(`No lawyer available for the identified domain: ${domain}`);
-          }
-
-      } catch (e) {
-          setError('An error occurred during optimization.');
-          console.error(e);
-      } finally {
-          setIsOptimizing(false);
-      }
   };
 
   const handleTextSelection = async () => {
@@ -344,83 +298,6 @@ export default function DashboardPage() {
                                 <p>Upload a document to analyze clauses for risks.</p>
                             </div>
                             )}
-                        </AccordionContent>
-                        </AccordionItem>
-                    </Card>
-
-                    <Card className="shadow-sm">
-                        <AccordionItem value="redaction" className="border-none">
-                        <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
-                            <div className="flex items-center gap-3">
-                                <ShieldCheck className="h-5 w-5" /> Redaction Review
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-4 pb-4">
-                            {isLoading && !redactionResult ? (
-                            <div className="flex items-center justify-center p-4">
-                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                            </div>
-                            ) : redactionResult ? (
-                            <div className="p-3 border rounded-md bg-secondary space-y-2">
-                                <div className="flex items-center gap-2 text-green-600">
-                                <ShieldCheck className="h-4 w-4"/>
-                                <h4 className="font-semibold text-sm">Redaction Complete</h4>
-                                </div>
-                                <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">{redactionResult.redactedDocument}</p>
-                            </div>
-                            ) : (
-                            <div className="text-center text-muted-foreground text-sm p-4">
-                                <p>Upload a document to find and redact sensitive info.</p>
-                            </div>
-                            )}
-                        </AccordionContent>
-                        </AccordionItem>
-                    </Card>
-
-                    <Card className="shadow-sm" id="optimization-assistant">
-                        <AccordionItem value="optimization" className="border-none">
-                        <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
-                            <div className="flex items-center gap-3">
-                                <Zap className="h-5 w-5" /> Optimization Assistant
-                            </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-4 pb-4">
-                             <div className="space-y-4">
-                                <CardDescription>
-                                    Automatically identify the document's legal domain and assign it to the best-suited lawyer for review.
-                                </CardDescription>
-                                <Button onClick={handleOptimize} disabled={isOptimizing || !documentText}>
-                                    {isOptimizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
-                                    Optimize Assignment
-                                </Button>
-                                {isOptimizing ? (
-                                     <div className="text-center text-muted-foreground py-6 flex justify-center">
-                                        <Loader2 className="h-8 w-8 animate-spin" />
-                                    </div>
-                                ) : optimizationResult ? (
-                                    <div>
-                                        <h3 className="font-semibold mb-2 mt-4">Assignment Result</h3>
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Identified Domain</TableHead>
-                                                    <TableHead>Assigned To</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                <TableRow>
-                                                    <TableCell className="capitalize">{optimizationResult.docDomain}</TableCell>
-                                                    <TableCell>{optimizationResult.lawyerName}</TableCell>
-                                                </TableRow>
-                                            </TableBody>
-                                        </Table>
-                                    </div>
-                                ) : (
-                                    <div className="text-center text-muted-foreground text-sm py-6">
-                                        <p>Click "Optimize Assignment" after uploading a document.</p>
-                                    </div>
-                                )}
-                             </div>
                         </AccordionContent>
                         </AccordionItem>
                     </Card>
