@@ -22,23 +22,23 @@ const AstraIcon = (props: React.SVGProps<SVGSVGElement>) => (
       <path
         d="M56 6 C58 40, 58 80, 56 104"
         stroke="#ffffff22"
-        stroke-width="6"
+        strokeWidth="6"
         fill="none"
-        stroke-linecap="round"
+        strokeLinecap="round"
       />
       <path
         d="M80 6 C82 40, 82 80, 80 104"
         stroke="#ffffff22"
-        stroke-width="6"
+        strokeWidth="6"
         fill="none"
-        stroke-linecap="round"
+        strokeLinecap="round"
       />
       <path
         d="M104 6 C102 40, 102 80, 104 104"
         stroke="#ffffff22"
-        stroke-width="6"
+        strokeWidth="6"
         fill="none"
-        stroke-linecap="round"
+        strokeLinecap="round"
       />
     </g>
     <g id="base" transform="translate(0,146)">
@@ -50,8 +50,8 @@ const AstraIcon = (props: React.SVGProps<SVGSVGElement>) => (
       d="M36 34 h88 v110 h-88 z"
       fill="none"
       stroke="#071428"
-      stroke-opacity="0.12"
-      stroke-width="2"
+      strokeOpacity="0.12"
+      strokeWidth="2"
       rx="6"
     />
   </svg>
