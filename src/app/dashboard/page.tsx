@@ -95,6 +95,13 @@ export default function DashboardPage() {
       setIsLoading(false);
     }
   };
+  
+  const handleReset = () => {
+    setAnalysisResult(null);
+    setAssistantMessages([
+      { role: 'assistant', content: "I'm here to help with questions about your document. Ask me anything!" }
+    ]);
+  };
 
   const handleTextSelection = async () => {
     const selectedText = window.getSelection()?.toString().trim();
@@ -229,7 +236,7 @@ export default function DashboardPage() {
                     <Button variant="ghost" size="icon"><ZoomOut className="h-5 w-5" /></Button>
                     <span className="text-sm font-semibold px-2">100%</span>
                     <Button variant="ghost" size="icon"><ZoomIn className="h-5 w-5" /></Button>
-                    <Button variant="ghost" size="icon"><RotateCw className="h-5 w-5" /></Button>
+                    <Button variant="ghost" size="icon" onClick={handleReset}><RotateCw className="h-5 w-5" /></Button>
                     <Button variant="outline" size="sm" onClick={open}><Upload className="mr-2 h-4 w-4" /> New Document</Button>
                 </div>
             </CardHeader>
