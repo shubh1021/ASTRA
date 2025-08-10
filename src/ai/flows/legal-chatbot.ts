@@ -26,7 +26,6 @@ const LegalChatbotInputSchema = z.object({
     "An optional document or image file provided by the user for context, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
   ),
   history: z.array(MessageSchema).describe('The history of the conversation so far.'),
-  accessToken: z.string().optional().describe('An optional access token for integrated services.'),
 });
 export type LegalChatbotInput = z.infer<typeof LegalChatbotInputSchema>;
 

@@ -10,8 +10,6 @@ import { Loader2, Bot, User, Send, Paperclip, X, File as FileIcon, LogIn } from 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { legalChatbot, LegalChatbotInput } from '@/ai/flows/legal-chatbot';
 import Image from 'next/image';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser } from 'firebase/auth';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -26,19 +24,11 @@ export default function LegalChatbotPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [user, setUser] = useState<FirebaseUser | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   const initialLoad = useRef(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
 
   useEffect(() => {
     if (initialLoad.current) {
