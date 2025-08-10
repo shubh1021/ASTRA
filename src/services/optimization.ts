@@ -35,8 +35,12 @@ let lawyers: Lawyer[] = [
  * Retrieves the current state of all lawyers.
  */
 export async function getLawyers(): Promise<Lawyer[]> {
-    // Return a deep copy to avoid direct mutation of the state from outside
-    return JSON.parse(JSON.stringify(lawyers)).map((l: any) => ({...l, expertise: new Set(l.expertise)}));
+    // Return a deep copy to avoid direct mutation of the state from outside.
+    // JSON.stringify converts Sets to {}. We need to handle this manually.
+    return lawyers.map(l => ({
+        ...l,
+        expertise: new Set(Array.from(l.expertise))
+    }));
 }
 
 /**
@@ -162,7 +166,10 @@ export async function processDocuments(
     const results: AssignmentResult[] = [];
     
     // Create a deep copy of lawyers to simulate the assignments without modifying the actual state yet
-    const simulationLawyers = JSON.parse(JSON.stringify(lawyers)).map((l: any) => ({...l, expertise: new Set(l.expertise)}));
+    const simulationLawyers = lawyers.map(l => ({
+        ...l,
+        expertise: new Set(Array.from(l.expertise))
+    }));
 
     let finalAssignments: { docId: string | number, lawyerId: number }[] = [];
 
