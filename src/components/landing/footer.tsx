@@ -7,7 +7,7 @@ export default function Footer() {
     <footer id="contact" className="bg-secondary border-t">
       <div className="container max-w-7xl py-12 md:py-16">
         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-          <Logo className="h-7" />
+          <Logo className="h-20" />
           <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
             <Link href="#" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               About

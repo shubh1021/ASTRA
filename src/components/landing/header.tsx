@@ -65,7 +65,7 @@ export default function Header() {
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between border-b pb-4 border-primary-foreground/20">
                   <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
-                    <Logo className="h-10 text-primary-foreground" />
+                    <Logo className="h-20 text-primary-foreground" />
                   </Link>
                   <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)} className="hover:bg-primary-foreground/10">
                       <X className="h-6 w-6" />

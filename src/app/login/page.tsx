@@ -21,7 +21,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md mx-auto shadow-lg">
         <CardHeader className="text-center">
            <Link href="/" className="flex items-center justify-center mb-4">
-              <Logo className="h-8" />
+              <Logo className="h-20" />
             </Link>
           <CardTitle className="font-serif text-2xl">Welcome Back</CardTitle>
           <CardDescription>Enter your credentials to access your dashboard.</CardDescription>

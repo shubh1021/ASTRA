@@ -101,7 +101,7 @@ export default function DashboardPage() {
         {/* Sidebar */}
         <nav className="w-64 flex-col border-r bg-background p-4 hidden md:flex">
             <div className="mb-8">
-                <Logo className="h-7" />
+                <Logo className="h-20" />
             </div>
             <div className="flex-1 space-y-2">
                 <Button variant="ghost" className="w-full justify-start text-base py-6 bg-secondary">
