@@ -7,17 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { analyzeLegalClauses, AnalyzeLegalClausesOutput } from '@/ai/flows/analyze-legal-clauses';
 import { redactSensitiveData, RedactSensitiveDataOutput } from '@/ai/flows/redact-sensitive-data';
-import { deepSearch, DeepSearchOutput } from '@/ai/flows/deep-search';
-import { Loader2, ShieldCheck, FileCode, Bot, Globe, ArrowLeft, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send, Settings, User, LogOut, Scale, File as FileIcon, Link as LinkIcon } from 'lucide-react';
+import { deepSearch } from '@/ai/flows/deep-search';
+import { Loader2, ShieldCheck, FileCode, Bot, Search, ArrowLeft, ZoomIn, ZoomOut, RotateCw, Upload, Send, Settings, User, LogOut, File as FileIcon, BrainCircuit } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Logo from '@/components/logo';
-import { Input } from '@/components/ui/input';
 
 export default function DashboardPage() {
   const [documentText, setDocumentText] = useState('');
@@ -26,14 +26,12 @@ export default function DashboardPage() {
   const [analysisResult, setAnalysisResult] = useState<AnalyzeLegalClausesOutput | null>(null);
   const [redactionResult, setRedactionResult] = useState<RedactSensitiveDataOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeAccordionItems, setActiveAccordionItems] = useState(["analysis", "redaction", "deepsearch"]);
-
-  const [deepSearchQuery, setDeepSearchQuery] = useState('');
-  const [isDeepSearching, setIsDeepSearching] = useState(false);
-  const [deepSearchResult, setDeepSearchResult] = useState<DeepSearchOutput | null>(null);
+  const [activeAccordionItems, setActiveAccordionItems] = useState(["analysis", "redaction"]);
 
   const [sidebarWidth, setSidebarWidth] = useState(256);
   const isResizing = useRef(false);
+  const pathname = usePathname();
+
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -118,35 +116,16 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDeepSearch = async (query?: string) => {
-    const searchQuery = (query || deepSearchQuery).trim();
-    if (!searchQuery) return;
-
-    setIsDeepSearching(true);
-    setDeepSearchResult(null);
-    setError(null);
-
-    try {
-        const result = await deepSearch({ query: searchQuery });
-        setDeepSearchResult(result);
-    } catch (e) {
-        setError('DeepSearch failed. Please try again.');
-        console.error(e);
-    } finally {
-        setIsDeepSearching(false);
-    }
-  };
-
-  const handleTextSelection = () => {
+  const handleTextSelection = async () => {
     const selectedText = window.getSelection()?.toString().trim();
     if (selectedText && selectedText.length > 0) {
-        // Expand accordions
-        setActiveAccordionItems(["analysis", "redaction", "deepsearch"]);
-        // Trigger analysis
+        setActiveAccordionItems(["analysis", "redaction"]);
         handleAnalyze(selectedText);
-        // Trigger deep search
-        setDeepSearchQuery(selectedText);
-        handleDeepSearch(selectedText);
+        try {
+          await deepSearch({ query: selectedText });
+        } catch (e) {
+            console.error(e);
+        }
     }
   };
 
@@ -164,6 +143,12 @@ export default function DashboardPage() {
     }
   };
 
+  const navItems = [
+    { href: '/dashboard', label: 'Document Analysis', icon: FileIcon },
+    { href: '/dashboard/deep-search', label: 'DeepSearch', icon: Search },
+    { href: '/dashboard/legal-chatbot', label: 'Legal Question', icon: BrainCircuit },
+  ];
+
   return (
     <div className="flex h-screen bg-secondary">
         {/* Sidebar */}
@@ -175,14 +160,20 @@ export default function DashboardPage() {
                 <Logo className="h-20" />
             </div>
             <div className="flex-1 space-y-2 overflow-y-auto">
-                <Button variant="ghost" className="w-full justify-start text-base py-6 bg-secondary">
-                    <FileIcon className="mr-3 h-5 w-5"/>
-                    Document Analysis
-                </Button>
-                <Button variant="ghost" className="w-full justify-start text-base py-6">
-                    <Search className="mr-3 h-5 w-5"/>
-                    DeepSearch
-                </Button>
+                 {navItems.map((item) => (
+                    <Link href={item.href} key={item.href}>
+                         <Button
+                            variant="ghost"
+                            className={cn(
+                                "w-full justify-start text-base py-6",
+                                pathname === item.href && "bg-secondary"
+                            )}
+                        >
+                            <item.icon className="mr-3 h-5 w-5"/>
+                            {item.label}
+                        </Button>
+                    </Link>
+                 ))}
             </div>
             <div className="mt-auto space-y-2">
                  <Button variant="ghost" className="w-full justify-start">
@@ -225,6 +216,13 @@ export default function DashboardPage() {
       <div className="flex-1 flex flex-col min-h-0">
         <header className="flex items-center justify-between p-4 border-b bg-background">
             <h1 className="text-xl font-semibold font-serif">Document Workspace</h1>
+            <div className="flex items-center gap-4">
+                <Link href="/dashboard">
+                    <Button variant={pathname === '/dashboard' ? 'default' : 'outline'}>
+                        <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
+                    </Button>
+                </Link>
+            </div>
         </header>
 
         <main className="flex-1 grid md:grid-cols-3 gap-1 min-h-0 p-4 bg-secondary">
@@ -341,7 +339,6 @@ export default function DashboardPage() {
                         </AccordionContent>
                         </AccordionItem>
                     </Card>
-
                     </Accordion>
                 </div>
             </ScrollArea>
@@ -365,3 +362,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
