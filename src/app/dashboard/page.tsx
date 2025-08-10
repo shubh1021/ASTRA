@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { analyzeLegalClauses, AnalyzeLegalClausesOutput } from '@/ai/flows/analyze-legal-clauses';
 import { redactSensitiveData, RedactSensitiveDataOutput } from '@/ai/flows/redact-sensitive-data';
-import { Loader2, AlertTriangle, ShieldCheck, FileText as FileTextIcon, Bot, Scale, Settings, ArrowLeft, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send, FileCode, Globe } from 'lucide-react';
+import { Loader2, ShieldCheck, FileCode, Bot, Globe, ArrowLeft, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function DashboardPage() {
   const [documentText, setDocumentText] = useState('');
@@ -142,110 +143,115 @@ export default function DashboardPage() {
                     <Button variant="outline" size="sm" onClick={open}><Upload className="mr-2 h-4 w-4" /> New Document</Button>
                 </div>
             </div>
-            <CardContent className="flex-1 p-2 mt-2">
-              <div className={cn("h-full w-full rounded-lg border bg-background", isDragActive && "border-primary")}>
-                {documentText ? (
-                    <div className="p-8 whitespace-pre-wrap text-sm leading-relaxed overflow-auto h-full">
-                        {documentText}
+            <CardContent className="flex-1 p-2 mt-2 overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className={cn("h-full w-full rounded-lg border bg-background", isDragActive && "border-primary")}>
+                  {documentText ? (
+                      <div className="p-8 whitespace-pre-wrap text-sm leading-relaxed">
+                          {documentText}
+                      </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 min-h-[500px]" onClick={open}>
+                        <Upload className="h-16 w-16 mb-4 text-primary/50" />
+                        <h3 className="text-lg font-semibold">Upload your document</h3>
+                        <p className="text-sm">Drag and drop a .txt file here or click to select a file.</p>
+                         {isDragActive && <p className="text-primary mt-2">Drop the file to upload!</p>}
                     </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8" onClick={open}>
-                      <Upload className="h-16 w-16 mb-4 text-primary/50" />
-                      <h3 className="text-lg font-semibold">Upload your document</h3>
-                      <p className="text-sm">Drag and drop a .txt file here or click to select a file.</p>
-                       {isDragActive && <p className="text-primary mt-2">Drop the file to upload!</p>}
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              </ScrollArea>
             </CardContent>
           </div>
           
           {/* AI Tools Panel */}
-          <aside className="md:col-span-1 flex flex-col bg-background p-4 border-l border-border">
-            <h2 className="text-lg font-semibold mb-4">Document Tools</h2>
-            <Accordion type="multiple" className="w-full space-y-3" defaultValue={["analysis", "redaction", "deepsearch"]}>
-              <Card className="bg-secondary/30">
-                <AccordionItem value="analysis" className="border-none">
-                  <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
-                     <div className="flex items-center gap-3">
-                        <FileCode className="h-5 w-5" /> Document Analysis
-                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4">
-                    {isLoading && !analysisResult ? (
-                      <div className="flex items-center justify-center p-4">
-                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      </div>
-                    ) : analysisResult ? (
-                      <div className="space-y-3">
-                        {analysisResult.clauseAnalysis.map((item, index) => (
-                          <div key={index} className="p-3 border rounded-md bg-background/50">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-semibold text-sm">Clause Analysis</h4>
-                              <Badge className={cn("text-xs border", getRiskColor(item.riskLevel))}>
-                                {item.riskLevel.charAt(0).toUpperCase() + item.riskLevel.slice(1)} Risk
-                              </Badge>
+          <aside className="md:col-span-1 flex flex-col bg-background border-l border-border">
+             <ScrollArea className="flex-1">
+                <div className="p-4">
+                    <h2 className="text-lg font-semibold mb-4">Document Tools</h2>
+                    <Accordion type="multiple" className="w-full space-y-3" defaultValue={["analysis", "redaction", "deepsearch"]}>
+                    <Card className="bg-secondary/30">
+                        <AccordionItem value="analysis" className="border-none">
+                        <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
+                            <div className="flex items-center gap-3">
+                                <FileCode className="h-5 w-5" /> Document Analysis
                             </div>
-                            <p className="text-xs text-muted-foreground italic mb-2">"{item.clause}"</p>
-                            <p className="text-xs">{item.explanation}</p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center text-muted-foreground text-sm p-4">
-                        <p>Upload a document to analyze clauses for risks.</p>
-                      </div>
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
-              </Card>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                            {isLoading && !analysisResult ? (
+                            <div className="flex items-center justify-center p-4">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                            </div>
+                            ) : analysisResult ? (
+                            <div className="space-y-3">
+                                {analysisResult.clauseAnalysis.map((item, index) => (
+                                <div key={index} className="p-3 border rounded-md bg-background/50">
+                                    <div className="flex items-center justify-between mb-2">
+                                    <h4 className="font-semibold text-sm">Clause Analysis</h4>
+                                    <Badge className={cn("text-xs border", getRiskColor(item.riskLevel))}>
+                                        {item.riskLevel.charAt(0).toUpperCase() + item.riskLevel.slice(1)} Risk
+                                    </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground italic mb-2">"{item.clause}"</p>
+                                    <p className="text-xs">{item.explanation}</p>
+                                </div>
+                                ))}
+                            </div>
+                            ) : (
+                            <div className="text-center text-muted-foreground text-sm p-4">
+                                <p>Upload a document to analyze clauses for risks.</p>
+                            </div>
+                            )}
+                        </AccordionContent>
+                        </AccordionItem>
+                    </Card>
 
-               <Card className="bg-secondary/30">
-                 <AccordionItem value="redaction" className="border-none">
-                  <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
-                      <div className="flex items-center gap-3">
-                        <ShieldCheck className="h-5 w-5" /> Redaction Review
-                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4">
-                     {isLoading && !redactionResult ? (
-                      <div className="flex items-center justify-center p-4">
-                         <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      </div>
-                    ) : redactionResult ? (
-                      <div className="p-3 border rounded-md bg-background/50 space-y-2">
-                        <div className="flex items-center gap-2 text-green-400">
-                          <ShieldCheck className="h-4 w-4"/>
-                          <h4 className="font-semibold text-sm">Redaction Complete</h4>
-                        </div>
-                        <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">{redactionResult.redactedDocument}</p>
-                      </div>
-                    ) : (
-                      <div className="text-center text-muted-foreground text-sm p-4">
-                        <p>Upload a document to find and redact sensitive info.</p>
-                      </div>
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
-              </Card>
+                    <Card className="bg-secondary/30">
+                        <AccordionItem value="redaction" className="border-none">
+                        <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
+                            <div className="flex items-center gap-3">
+                                <ShieldCheck className="h-5 w-5" /> Redaction Review
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                            {isLoading && !redactionResult ? (
+                            <div className="flex items-center justify-center p-4">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                            </div>
+                            ) : redactionResult ? (
+                            <div className="p-3 border rounded-md bg-background/50 space-y-2">
+                                <div className="flex items-center gap-2 text-green-400">
+                                <ShieldCheck className="h-4 w-4"/>
+                                <h4 className="font-semibold text-sm">Redaction Complete</h4>
+                                </div>
+                                <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">{redactionResult.redactedDocument}</p>
+                            </div>
+                            ) : (
+                            <div className="text-center text-muted-foreground text-sm p-4">
+                                <p>Upload a document to find and redact sensitive info.</p>
+                            </div>
+                            )}
+                        </AccordionContent>
+                        </AccordionItem>
+                    </Card>
 
-              <Card className="bg-secondary/30">
-               <AccordionItem value="deepsearch" className="border-none">
-                  <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
-                     <div className="flex items-center gap-3">
-                        <Globe className="h-5 w-5" /> DeepSearch
-                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4">
-                    <div className="text-center text-muted-foreground text-sm p-4">
-                      <p>DeepSearch functionality will be available soon.</p>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Card>
-            </Accordion>
-            
-            <div className="mt-auto pt-4">
+                    <Card className="bg-secondary/30">
+                    <AccordionItem value="deepsearch" className="border-none">
+                        <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
+                            <div className="flex items-center gap-3">
+                                <Globe className="h-5 w-5" /> DeepSearch
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                            <div className="text-center text-muted-foreground text-sm p-4">
+                            <p>DeepSearch functionality will be available soon.</p>
+                            </div>
+                        </AccordionContent>
+                        </AccordionItem>
+                    </Card>
+                    </Accordion>
+                </div>
+            </ScrollArea>
+            <div className="p-4 border-t border-border">
                 <h3 className="text-base font-semibold mb-2 flex items-center gap-2"><Bot className="h-5 w-5" /> Document Assistant</h3>
                 <Card className="bg-secondary/30 p-3">
                     <div className="bg-background/50 p-2 rounded-md text-sm text-muted-foreground">
