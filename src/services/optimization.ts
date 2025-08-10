@@ -14,7 +14,7 @@ export interface Document {
 }
 
 // Initial data, can be extended
-let lawyers: Lawyer[] = [
+const initialLawyers: Lawyer[] = [
     { id: 1, name: "Alice", expertise: new Set(["corporate", "tax"]), assigned_docs: 0 },
     { id: 2, name: "Bob", expertise: new Set(["ip", "litigation"]), assigned_docs: 0 },
     { id: 3, name: "Charlie", expertise: new Set(["family", "real_estate"]), assigned_docs: 0 },
@@ -22,6 +22,11 @@ let lawyers: Lawyer[] = [
     { id: 5, name: "Eve", expertise: new Set(["environment", "tax"]), assigned_docs: 0 },
     { id: 6, name: "Frank", expertise: new Set(["corporate", "family"]), assigned_docs: 0 },
 ];
+
+export async function getLawyers(): Promise<Lawyer[]> {
+    return JSON.parse(JSON.stringify(initialLawyers)).map((l: any) => ({...l, expertise: new Set(l.expertise)}));
+}
+
 
 export interface AssignmentResult {
     docDomain: string;

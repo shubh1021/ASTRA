@@ -46,7 +46,7 @@ export default function DashboardLayout({
     { href: '/dashboard', label: 'Document Analysis', icon: FileIcon },
     { href: '/dashboard/deep-search', label: 'DeepSearch', icon: Search },
     { href: '/dashboard/legal-chatbot', label: 'Legal Question', icon: BrainCircuit },
-    { href: '/dashboard/optimization-assistant', label: 'Optimization', icon: Zap },
+    { href: '/dashboard#optimization-assistant', label: 'Optimization', icon: Zap },
   ];
 
   return (

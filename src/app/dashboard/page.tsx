@@ -4,17 +4,21 @@
 import { useState, useCallback, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { analyzeLegalClauses, AnalyzeLegalClausesOutput } from '@/ai/flows/analyze-legal-clauses';
 import { redactSensitiveData, RedactSensitiveDataOutput } from '@/ai/flows/redact-sensitive-data';
 import { legalChatbot } from '@/ai/flows/legal-chatbot';
-import { Loader2, ShieldCheck, FileCode, Bot, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send } from 'lucide-react';
+import { identifyDocumentDomain } from '@/ai/flows/identify-document-domain';
+import { processDocuments, AssignmentResult, getLawyers, Lawyer } from '@/services/optimization';
+import { Loader2, ShieldCheck, FileCode, Bot, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRouter } from 'next/navigation';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 
 interface AssistantMessage {
     role: 'user' | 'assistant';
@@ -33,7 +37,7 @@ export default function DashboardPage() {
   const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([
       { role: 'assistant', content: "I'm here to help with questions about your document. Ask me anything!" }
   ]);
-  const [activeAccordionItems, setActiveAccordionItems] = useState(["analysis", "redaction"]);
+    const [activeAccordionItems, setActiveAccordionItems] = useState(["analysis", "redaction", "optimization"]);
   const router = useRouter();
 
   const [panelsWidth, setPanelsWidth] = useState({ left: 66, right: 34 });
@@ -43,6 +47,10 @@ export default function DashboardPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const rightPanelRef = useRef<HTMLDivElement>(null);
   const assistantScrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Optimization state
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizationResult, setOptimizationResult] = useState<AssignmentResult | null>(null);
 
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -56,6 +64,7 @@ export default function DashboardPage() {
           setDocumentText(text);
           setError(null);
           handleAnalyze(text);
+          setOptimizationResult(null); // Reset optimization on new doc
         };
         reader.onerror = () => {
           setError('Failed to read the file. Please try another file.');
@@ -103,6 +112,34 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleOptimize = async () => {
+      if (!documentText) return;
+
+      setIsOptimizing(true);
+      setOptimizationResult(null);
+      setError(null);
+      
+      try {
+          // 1. Identify domain
+          const { domain } = await identifyDocumentDomain({ documentText });
+
+          // 2. Process assignment
+          const { results } = await processDocuments([{ id: 1, domain }]);
+
+          if (results.length > 0) {
+              setOptimizationResult(results[0]);
+          } else {
+              setError(`No lawyer available for the identified domain: ${domain}`);
+          }
+
+      } catch (e) {
+          setError('An error occurred during optimization.');
+          console.error(e);
+      } finally {
+          setIsOptimizing(false);
+      }
   };
 
   const handleTextSelection = async () => {
@@ -339,6 +376,55 @@ export default function DashboardPage() {
                         </AccordionContent>
                         </AccordionItem>
                     </Card>
+
+                    <Card className="shadow-sm" id="optimization-assistant">
+                        <AccordionItem value="optimization" className="border-none">
+                        <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
+                            <div className="flex items-center gap-3">
+                                <Zap className="h-5 w-5" /> Optimization Assistant
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                             <div className="space-y-4">
+                                <CardDescription>
+                                    Automatically identify the document's legal domain and assign it to the best-suited lawyer for review.
+                                </CardDescription>
+                                <Button onClick={handleOptimize} disabled={isOptimizing || !documentText}>
+                                    {isOptimizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
+                                    Optimize Assignment
+                                </Button>
+                                {isOptimizing ? (
+                                     <div className="text-center text-muted-foreground py-6 flex justify-center">
+                                        <Loader2 className="h-8 w-8 animate-spin" />
+                                    </div>
+                                ) : optimizationResult ? (
+                                    <div>
+                                        <h3 className="font-semibold mb-2 mt-4">Assignment Result</h3>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Identified Domain</TableHead>
+                                                    <TableHead>Assigned To</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                <TableRow>
+                                                    <TableCell className="capitalize">{optimizationResult.docDomain}</TableCell>
+                                                    <TableCell>{optimizationResult.lawyerName}</TableCell>
+                                                </TableRow>
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                ) : (
+                                    <div className="text-center text-muted-foreground text-sm py-6">
+                                        <p>Click "Optimize Assignment" after uploading a document.</p>
+                                    </div>
+                                )}
+                             </div>
+                        </AccordionContent>
+                        </AccordionItem>
+                    </Card>
+
                     </Accordion>
                 </div>
             </ScrollArea>
@@ -405,5 +491,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    
