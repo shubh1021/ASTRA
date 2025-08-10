@@ -70,10 +70,10 @@ export default function JurisdictionPage() {
                 key={j.code}
                 onClick={() => setSelectedJurisdiction(j.code)}
                 className={cn(
-                  "flex items-center text-left p-4 rounded-lg border-2 transition-colors",
+                  "flex items-center text-left p-4 rounded-lg border-2 transition-all duration-300",
                   selectedJurisdiction === j.code
-                    ? "border-primary bg-primary/5"
-                    : "border-border bg-transparent hover:bg-secondary"
+                    ? "border-primary bg-primary/5 shadow-inner"
+                    : "border-border bg-transparent hover:bg-secondary hover:border-primary/50"
                 )}
               >
                 <div className="flex-shrink-0 w-12 text-2xl font-bold text-muted-foreground">{j.code}</div>
@@ -81,7 +81,7 @@ export default function JurisdictionPage() {
                   <h3 className="font-semibold">{j.name}</h3>
                   <p className="text-sm text-muted-foreground">{j.description}</p>
                 </div>
-                {selectedJurisdiction === j.code && <ChevronRight className="h-5 w-5 text-primary ml-4" />}
+                {selectedJurisdiction === j.code && <ChevronRight className="h-5 w-5 text-primary ml-4 transition-transform" />}
               </button>
             ))}
           </div>
@@ -90,10 +90,10 @@ export default function JurisdictionPage() {
                 size="lg"
                 onClick={handleContinue}
                 disabled={!selectedJurisdiction}
-                className="w-full max-w-xs"
+                className="w-full max-w-xs group"
               >
                 Continue
-                <ChevronRight className="ml-2 h-4 w-4" />
+                <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             <p className="text-muted-foreground text-sm mt-4">
               You can change your jurisdiction later in your account settings.

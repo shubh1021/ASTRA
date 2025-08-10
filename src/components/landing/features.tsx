@@ -42,13 +42,13 @@ export default function Features() {
         </div>
         <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           {features.map((feature, index) => (
-            <Link href={feature.href} key={index}>
-              <Card className="flex flex-col items-center text-center p-8 bg-background border-2 border-transparent hover:border-primary hover:shadow-2xl transition-all duration-300 h-full">
+            <Link href={feature.href} key={index} className="block">
+              <Card className="flex flex-col items-center text-center p-8 bg-background border-2 border-transparent hover:border-primary hover:shadow-2xl transition-all duration-300 h-full transform hover:-translate-y-2">
                 <CardHeader className="p-0">
-                  <div className="bg-primary/10 p-4 rounded-full mb-6">
+                  <div className="bg-primary/10 p-4 rounded-full mb-6 inline-block">
                     {feature.icon}
                   </div>
-                  <CardTitle className="font-serif text-2xl mb-2">{feature.title}</CardTitle>
+                  <CardTitle className="font-serif text-xl mb-2">{feature.title}</CardTitle>
                   <CardDescription className="text-base text-muted-foreground">{feature.description}</CardDescription>
                 </CardHeader>
               </Card>
