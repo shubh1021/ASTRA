@@ -37,28 +37,29 @@ export async function deepSearch(input: DeepSearchInput): Promise<DeepSearchOutp
   return deepSearchFlow(input);
 }
 
-// Internal function to perform the web search with Bing
+// Internal function to perform the web search with Brave
 async function performWebSearch(query: string): Promise<any> {
-  const bingApiKey = process.env.BING_SEARCH_API_KEY;
-  if (!bingApiKey) {
-    throw new Error('BING_SEARCH_API_KEY is not set in environment variables.');
+  const braveApiKey = process.env.BRAVE_SEARCH_API_KEY;
+  if (!braveApiKey) {
+    throw new Error('BRAVE_SEARCH_API_KEY is not set in environment variables.');
   }
 
-  const response = await fetch(`https://api.bing.microsoft.com/v7.0/search?q=${encodeURIComponent(query)}`, {
+  const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}`, {
     headers: {
-      'Ocp-Apim-Subscription-Key': bingApiKey,
+        'Accept': 'application/json',
+        'X-Subscription-Token': braveApiKey,
     },
   });
 
   if (!response.ok) {
-    throw new Error(`Bing Search API request failed with status ${response.status}`);
+    throw new Error(`Brave Search API request failed with status ${response.status}`);
   }
 
   const data = await response.json();
-  return (data.webPages?.value || []).map((item: any) => ({
-      title: item.name,
+  return (data.web?.results || []).map((item: any) => ({
+      title: item.title,
       url: item.url,
-      snippet: item.snippet,
+      snippet: item.description,
   }));
 }
 
