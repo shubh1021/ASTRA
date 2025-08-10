@@ -14,7 +14,7 @@ import { getCalendarEvents } from '@/ai/flows/get-calendar-events';
 import { createCalendarEvent, deleteCalendarEvent } from '@/ai/tools/calendar';
 import { Calendar } from '@/components/ui/calendar-view';
 import { DatePicker } from '@/components/ui/date-picker';
-import { getLocalTimeZone, today, parseDateTime, DateValue, ZonedDateTime } from '@internationalized/date';
+import { getLocalTimeZone, today, parseDateTime, type DateValue, ZonedDateTime } from '@internationalized/date';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { TimeField } from '@/components/ui/date-picker';
 import { I18nProvider } from 'react-aria';
@@ -58,7 +58,6 @@ export default function SchedulerPage() {
       setIsLoading(true);
       if (currentUser) {
         setUser(currentUser);
-        const credential = await currentUser.getIdTokenResult();
         const storedToken = sessionStorage.getItem('google-access-token');
         if (storedToken) {
           setAccessToken(storedToken);
@@ -72,7 +71,7 @@ export default function SchedulerPage() {
       setIsLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [toast]);
 
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
@@ -167,7 +166,7 @@ export default function SchedulerPage() {
             <div className="md:col-span-1">
                 <Calendar
                     aria-label="Date (Unavailable)"
-                    disabled
+                    isDisabled
                     className='w-full'
                 />
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -235,8 +234,11 @@ function CreateEventForm({ accessToken, onSuccess }: { accessToken: string | nul
     setIsCreating(true);
 
     try {
-      const startZonedDateTime = new ZonedDateTime(date.year, date.month, date.day, getLocalTimeZone(), startTime.toAbsolute);
-      const endZonedDateTime = new ZonedDateTime(date.year, date.month, date.day, getLocalTimeZone(), endTime.toAbsolute);
+      const startDateTimeAbsolute = startTime.toAbsolute(getLocalTimeZone());
+      const endDateTimeAbsolute = endTime.toAbsolute(getLocalTimeZone());
+
+      const startZonedDateTime = new ZonedDateTime(date.year, date.month, date.day, getLocalTimeZone(), startDateTimeAbsolute);
+      const endZonedDateTime = new ZonedDateTime(date.year, date.month, date.day, getLocalTimeZone(), endDateTimeAbsolute);
 
       await createCalendarEvent({
         summary,

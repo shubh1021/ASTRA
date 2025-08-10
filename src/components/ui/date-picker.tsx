@@ -4,7 +4,7 @@
 import { useRef } from "react";
 import { useDateFieldState } from "react-stately";
 import { useDateField, useDateSegment, useTimeField } from "react-aria";
-import { createCalendar, DateValue } from "@internationalized/date";
+import { createCalendar, type DateValue } from "@internationalized/date";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { Button } from "./button";
@@ -21,6 +21,7 @@ function DateSegment({ segment, state }: { segment: any; state: any }) {
       ref={ref}
       className={cn(
         "focus:rounded-[2px] focus:bg-accent focus:text-accent-foreground focus:outline-none",
+        "tabular-nums",
         segment.isPlaceholder && "text-muted-foreground"
       )}
     >
@@ -87,6 +88,7 @@ export function TimeField(props: {
 }) {
   const state = useDateFieldState({
     ...props,
+    granularity: 'minute',
     createCalendar,
   });
 
