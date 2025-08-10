@@ -8,8 +8,9 @@ const ibmPlexSans = IBM_Plex_Sans({
   subsets: ['latin'],
   variable: '--font-ibm-plex-sans',
   weight: ['400', '500', '600', '700'],
+  display: 'swap',
 });
-const sourceSerif4 = Source_Serif_4({ subsets: ['latin'], variable: '--font-source-serif-4', weight: ['400', '600', '700'] });
+const sourceSerif4 = Source_Serif_4({ subsets: ['latin'], variable: '--font-source-serif-4', weight: ['400', '600', '700'], display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Astra',
