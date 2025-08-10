@@ -342,64 +342,6 @@ export default function DashboardPage() {
                         </AccordionItem>
                     </Card>
 
-                    <Card className="shadow-sm">
-                        <AccordionItem value="deepsearch" className="border-none">
-                            <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
-                                <div className="flex items-center gap-3">
-                                    <Globe className="h-5 w-5" /> DeepSearch
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="px-4 pb-4">
-                                <div className="space-y-4">
-                                    <div className="flex gap-2">
-                                        <Input
-                                            placeholder="Enter a legal query..."
-                                            value={deepSearchQuery}
-                                            onChange={(e) => setDeepSearchQuery(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && handleDeepSearch()}
-                                        />
-                                        <Button onClick={() => handleDeepSearch()} disabled={isDeepSearching}>
-                                            {isDeepSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                                        </Button>
-                                    </div>
-                                    {isDeepSearching ? (
-                                        <div className="flex items-center justify-center p-4">
-                                            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                                        </div>
-                                    ) : deepSearchResult ? (
-                                        <div className="space-y-4">
-                                            <div>
-                                                <h4 className="font-semibold mb-2">Summary</h4>
-                                                <p className="text-xs text-muted-foreground">{deepSearchResult.summary}</p>
-                                            </div>
-                                            <div>
-                                                <h4 className="font-semibold mb-2">Key Points</h4>
-                                                <ul className="space-y-1 list-disc list-inside text-xs text-muted-foreground">
-                                                    {deepSearchResult.keyPoints.map((point, i) => <li key={i}>{point}</li>)}
-                                                </ul>
-                                            </div>
-                                            <div>
-                                                <h4 className="font-semibold mb-2">Sources</h4>
-                                                <div className="space-y-2">
-                                                    {deepSearchResult.sources.map((source, i) => (
-                                                        <a href={source.url} target="_blank" rel="noopener noreferrer" key={i} className="block p-2 border rounded-md bg-secondary hover:bg-muted transition-colors">
-                                                            <div className="flex items-center gap-2">
-                                                                <LinkIcon className="h-3 w-3" />
-                                                                <p className="text-xs font-semibold truncate">{source.title}</p>
-                                                            </div>
-                                                        </a>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="text-center text-muted-foreground text-sm p-4">
-                                        </div>
-                                    )}
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Card>
                     </Accordion>
                 </div>
             </ScrollArea>
@@ -423,5 +365,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
