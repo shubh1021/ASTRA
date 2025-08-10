@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { analyzeLegalClauses, AnalyzeLegalClausesOutput } from '@/ai/flows/analyze-legal-clauses';
 import { redactSensitiveData, RedactSensitiveDataOutput } from '@/ai/flows/redact-sensitive-data';
+import { legalChatbot } from '@/ai/flows/legal-chatbot';
 import { Loader2, ShieldCheck, FileCode, Bot, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRouter } from 'next/navigation';
+
+interface AssistantMessage {
+    role: 'user' | 'assistant';
+    content: string;
+}
 
 export default function DashboardPage() {
   const [documentText, setDocumentText] = useState('');
@@ -23,12 +29,18 @@ export default function DashboardPage() {
   const [redactionResult, setRedactionResult] = useState<RedactSensitiveDataOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [assistantQuery, setAssistantQuery] = useState('');
+  const [isAssistantLoading, setIsAssistantLoading] = useState(false);
+  const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([
+      { role: 'assistant', content: "I'm here to help with questions about your document. Ask me anything!" }
+  ]);
   const [activeAccordionItems, setActiveAccordionItems] = useState(["analysis", "redaction"]);
   const router = useRouter();
 
   const [panelsWidth, setPanelsWidth] = useState({ left: 66, right: 34 });
   const isResizingPanels = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const assistantScrollAreaRef = useRef<HTMLDivElement>(null);
+
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -92,18 +104,69 @@ export default function DashboardPage() {
 
   const handleTextSelection = async () => {
     const selectedText = window.getSelection()?.toString().trim();
-    if (selectedText && selectedText.length > 0) {
-        localStorage.setItem('deepSearchQuery', selectedText);
-        router.push('/dashboard/deep-search');
+    if (selectedText && selectedText.length > 10) { // Only trigger for selections longer than 10 chars
+        setIsLoading(true);
+        setError(null);
+        setAnalysisResult(null);
+        setRedactionResult(null);
+
+        try {
+            const analysisPromise = analyzeLegalClauses({ documentText: selectedText });
+            const redactionPromise = redactSensitiveData({ documentText: selectedText });
+
+            const [analysis, redaction] = await Promise.all([analysisPromise, redactionPromise]);
+            
+            setAnalysisResult(analysis);
+            setRedactionResult(redaction);
+            
+            // Open the accordions to show the new results
+            setActiveAccordionItems(["analysis", "redaction"]);
+
+            // Also trigger a deep search
+            localStorage.setItem('deepSearchQuery', selectedText);
+            router.push('/dashboard/deep-search');
+
+        } catch (e) {
+            setError('An error occurred during analysis of the selected text. Please try again.');
+            console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
     }
   };
 
-  const handleAssistantSend = () => {
-    if (!assistantQuery.trim()) return;
-    localStorage.setItem('chatbotQuery', assistantQuery);
-    localStorage.setItem('chatbotContext', documentText);
-    localStorage.setItem('chatbotFileName', fileName);
-    router.push('/dashboard/legal-chatbot');
+  const scrollToAssistantBottom = () => {
+    setTimeout(() => {
+      const scrollableViewport = (assistantScrollAreaRef.current?.firstChild as HTMLElement)?.firstChild as HTMLElement;
+      if (scrollableViewport) {
+        scrollableViewport.scrollTop = scrollableViewport.scrollHeight;
+      }
+    }, 100);
+  };
+
+  const handleAssistantSend = async () => {
+    if (!assistantQuery.trim() || !documentText.trim()) return;
+
+    const newMessages: AssistantMessage[] = [...assistantMessages, { role: 'user', content: assistantQuery }];
+    setAssistantMessages(newMessages);
+    setAssistantQuery('');
+    setIsAssistantLoading(true);
+    scrollToAssistantBottom();
+    
+    try {
+        const result = await legalChatbot({
+            query: assistantQuery,
+            history: newMessages.slice(0, -1), // Send history without the current query
+            documentDataUri: `data:text/plain;base64,${btoa(documentText)}`,
+        });
+        setAssistantMessages(prev => [...prev, { role: 'assistant', content: result.response }]);
+    } catch(e) {
+        console.error(e);
+        setAssistantMessages(prev => [...prev, { role: 'assistant', content: "Sorry, I encountered an error. Please try again." }]);
+    } finally {
+        setIsAssistantLoading(false);
+        scrollToAssistantBottom();
+    }
   };
 
   const getRiskColor = (riskLevel: 'low' | 'medium' | 'high') => {
@@ -278,10 +341,27 @@ export default function DashboardPage() {
           </ScrollArea>
           <div className="p-4 pl-5 border-t mt-auto">
               <h3 className="text-base font-semibold mb-2 flex items-center gap-2 font-serif"><Bot className="h-5 w-5" /> Document Assistant</h3>
-              <Card className="p-3 shadow-sm">
-                  <div className="bg-secondary p-2 rounded-md text-sm text-muted-foreground">
-                      I'm here to help with questions about your document. Ask me anything!
-                  </div>
+              <Card className="p-3 shadow-sm flex flex-col h-[250px]">
+                  <ScrollArea className="flex-1 pr-2 -mr-2" ref={assistantScrollAreaRef}>
+                      <div className="space-y-4">
+                        {assistantMessages.map((msg, index) => (
+                            <div key={index} className={cn("flex items-start gap-2", msg.role === 'user' && 'justify-end')}>
+                                {msg.role === 'assistant' && <Bot className="h-5 w-5 text-primary flex-shrink-0 mt-1" />}
+                                <div className={cn("rounded-lg p-2 text-sm max-w-[90%]", msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary')}>
+                                    {msg.content}
+                                </div>
+                            </div>
+                        ))}
+                        {isAssistantLoading && (
+                            <div className="flex items-start gap-2">
+                                <Bot className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
+                                <div className="rounded-lg p-2 text-sm bg-secondary flex items-center">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                </div>
+                            </div>
+                        )}
+                      </div>
+                  </ScrollArea>
                   <div className="mt-2 relative">
                       <Textarea 
                         placeholder="Ask about this document..." 
@@ -301,7 +381,7 @@ export default function DashboardPage() {
                             size="icon" 
                             className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                             onClick={handleAssistantSend}
-                            disabled={!assistantQuery.trim() || !documentText.trim()}
+                            disabled={!assistantQuery.trim() || !documentText.trim() || isAssistantLoading}
                         >
                           <Send className="h-4 w-4" />
                       </Button>
