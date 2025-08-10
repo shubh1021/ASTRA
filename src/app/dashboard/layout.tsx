@@ -92,20 +92,6 @@ export default function DashboardLayout({
               Logout
             </Button>
           </Link>
-          <Card className="bg-secondary">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src="https://github.com/shadcn.png" />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold">User</p>
-                  <p className="text-muted-foreground">user@example.com</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </nav>
       
