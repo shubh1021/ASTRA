@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -22,7 +23,7 @@ export default function LoginPage() {
            <Link href="/" className="flex items-center justify-center gap-2 mb-4">
               <Scale className="h-8 w-8 text-primary" />
               <span className="text-3xl font-bold font-serif">
-                LexAI
+                Astra
               </span>
             </Link>
           <CardTitle className="font-serif text-2xl">Welcome Back</CardTitle>

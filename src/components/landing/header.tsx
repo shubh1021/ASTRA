@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -36,7 +37,7 @@ export default function Header() {
         <Link href="/" className="flex items-center gap-2">
           <Scale className="h-6 w-6 text-primary" />
           <span className="text-xl font-bold font-serif text-foreground">
-            LexAI
+            Astra
           </span>
         </Link>
 
@@ -69,7 +70,7 @@ export default function Header() {
                   <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
                     <Scale className="h-6 w-6 text-primary" />
                     <span className="text-xl font-bold font-serif text-foreground">
-                      LexAI
+                      Astra
                     </span>
                   </Link>
                   <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(false)}>

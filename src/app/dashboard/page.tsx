@@ -69,9 +69,9 @@ export default function DashboardPage() {
 
     try {
       const analysisPromise = analyzeLegalClauses({ documentText: text });
-      const redactionPromise = redactSensitiveData({ documentText: text });
-      
       setAnalysisResult(await analysisPromise);
+
+      const redactionPromise = redactSensitiveData({ documentText: text });
       setRedactionResult(await redactionPromise);
 
     } catch (e) {
@@ -101,7 +101,7 @@ export default function DashboardPage() {
         <nav className="w-64 flex-col border-r bg-background p-4 hidden md:flex">
             <div className="flex items-center gap-2 mb-8">
                 <Scale className="h-7 w-7 text-primary" />
-                <span className="text-2xl font-bold font-serif">LexAI</span>
+                <span className="text-2xl font-bold font-serif">Astra</span>
             </div>
             <div className="flex-1 space-y-2">
                 <Button variant="ghost" className="w-full justify-start text-base py-6 bg-secondary">

@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FileText, Search, BrainCircuit } from "lucide-react";
 
@@ -26,7 +27,7 @@ export default function Features() {
         <div className="text-center">
           <h2 className="font-serif text-4xl font-bold tracking-tight">A Smarter Way to Practice Law</h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-            LexAI provides a suite of powerful tools designed to enhance your legal research and document management.
+            Astra provides a suite of powerful tools designed to enhance your legal research and document management.
           </p>
         </div>
         <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">

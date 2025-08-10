@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -57,7 +58,7 @@ export default function JurisdictionPage() {
             <Link href="/" className="flex items-center justify-center gap-2 mb-6">
                 <Scale className="h-8 w-8 text-primary" />
                 <span className="text-3xl font-bold font-serif">
-                    LexAI
+                    Astra
                 </span>
             </Link>
             <h1 className="font-serif text-3xl font-bold">Choose your jurisdiction</h1>

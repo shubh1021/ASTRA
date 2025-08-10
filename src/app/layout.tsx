@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -7,7 +8,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const lora = Lora({ subsets: ['latin'], variable: '--font-lora' });
 
 export const metadata: Metadata = {
-  title: 'LexAI',
+  title: 'Astra',
   description: 'Your AI Legal Assistant',
 };
 
