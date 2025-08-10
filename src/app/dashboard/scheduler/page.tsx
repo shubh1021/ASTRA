@@ -72,7 +72,7 @@ export default function SchedulerPage() {
       setIsLoading(false);
     });
     return () => unsubscribe();
-  }, [toast]);
+  }, []);
 
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
@@ -294,5 +294,3 @@ function CreateEventForm({ accessToken, onSuccess }: { accessToken: string | nul
     </form>
   )
 }
-
-    
