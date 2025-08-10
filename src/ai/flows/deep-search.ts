@@ -28,7 +28,7 @@ const DeepSearchOutputSchema = z.object({
   sources: z.array(
     z.object({
       title: z.string().describe('The title of the search result.'),
-      url: z.string().url().describe('The URL of the search result.'),
+      url: z.string().describe('The URL of the search result.'),
     })
   ).describe('A list of relevant source URLs.'),
 });
