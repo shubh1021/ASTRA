@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,6 +26,10 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeAccordionItems, setActiveAccordionItems] = useState(["analysis", "redaction"]);
   const router = useRouter();
+
+  const [panelsWidth, setPanelsWidth] = useState({ left: 66, right: 34 });
+  const isResizingPanels = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -112,6 +116,30 @@ export default function DashboardPage() {
     }
   };
 
+  const handleMouseDownPanels = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingPanels.current = true;
+    document.addEventListener('mousemove', handleMouseMovePanels);
+    document.addEventListener('mouseup', handleMouseUpPanels);
+  };
+
+  const handleMouseMovePanels = (e: MouseEvent) => {
+    if (isResizingPanels.current && containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const newLeftWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+      
+      if (newLeftWidth > 25 && newLeftWidth < 75) { 
+        setPanelsWidth({ left: newLeftWidth, right: 100 - newLeftWidth });
+      }
+    }
+  };
+
+  const handleMouseUpPanels = () => {
+    isResizingPanels.current = false;
+    document.removeEventListener('mousemove', handleMouseMovePanels);
+    document.removeEventListener('mouseup', handleMouseUpPanels);
+  };
+
   return (
     <>
       <header className="flex items-center justify-between p-4 border-b bg-background">
@@ -121,52 +149,59 @@ export default function DashboardPage() {
           </div>
       </header>
 
-      <main className="flex-1 grid md:grid-cols-3 gap-1 min-h-0 p-4 bg-secondary">
+      <main ref={containerRef} className="flex-1 flex min-h-0 p-4 bg-secondary gap-1">
         {/* Document Viewer */}
-        <Card className="md:col-span-2 flex flex-col min-h-0 shadow-sm" {...getRootProps()}>
-          <input {...getInputProps()} />
-            <CardHeader className="flex-row items-center justify-between p-3 border-b">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                  {fileName ? (
-                      <>
-                      <FileCode className="h-5 w-5 text-primary" />
-                      <span>{fileName}</span>
-                      </>
-                  ) : (
-                        <span className="text-muted-foreground">No document uploaded</span>
-                  )}
-              </div>
-              <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon"><Search className="h-5 w-5" /></Button>
-                  <Button variant="ghost" size="icon"><ZoomOut className="h-5 w-5" /></Button>
-                  <span className="text-sm font-semibold px-2">100%</span>
-                  <Button variant="ghost" size="icon"><ZoomIn className="h-5 w-5" /></Button>
-                  <Button variant="ghost" size="icon"><RotateCw className="h-5 w-5" /></Button>
-                  <Button variant="outline" size="sm" onClick={open}><Upload className="mr-2 h-4 w-4" /> New Document</Button>
-              </div>
-          </CardHeader>
-          <CardContent className="flex-1 p-2 mt-2 min-h-0">
-            <ScrollArea className="h-full">
-              <div className={cn("h-full w-full rounded-lg", isDragActive && "border-primary border-dashed border-2 bg-primary/5")}>
-                {documentText ? (
-                    <div onMouseUp={handleTextSelection} className="p-6 whitespace-pre-wrap text-sm leading-relaxed">
-                        {documentText}
+        <div style={{ width: `${panelsWidth.left}%` }}>
+            <Card className="h-full flex flex-col min-h-0 shadow-sm" {...getRootProps()}>
+            <input {...getInputProps()} />
+                <CardHeader className="flex-row items-center justify-between p-3 border-b">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                    {fileName ? (
+                        <>
+                        <FileCode className="h-5 w-5 text-primary" />
+                        <span>{fileName}</span>
+                        </>
+                    ) : (
+                            <span className="text-muted-foreground">No document uploaded</span>
+                    )}
+                </div>
+                <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon"><Search className="h-5 w-5" /></Button>
+                    <Button variant="ghost" size="icon"><ZoomOut className="h-5 w-5" /></Button>
+                    <span className="text-sm font-semibold px-2">100%</span>
+                    <Button variant="ghost" size="icon"><ZoomIn className="h-5 w-5" /></Button>
+                    <Button variant="ghost" size="icon"><RotateCw className="h-5 w-5" /></Button>
+                    <Button variant="outline" size="sm" onClick={open}><Upload className="mr-2 h-4 w-4" /> New Document</Button>
+                </div>
+            </CardHeader>
+            <CardContent className="flex-1 p-2 mt-2 min-h-0">
+                <ScrollArea className="h-full">
+                <div className={cn("h-full w-full rounded-lg", isDragActive && "border-primary border-dashed border-2 bg-primary/5")}>
+                    {documentText ? (
+                        <div onMouseUp={handleTextSelection} className="p-6 whitespace-pre-wrap text-sm leading-relaxed">
+                            {documentText}
+                        </div>
+                    ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 min-h-[500px]" onClick={open}>
+                        <Upload className="h-16 w-16 mb-4 text-primary/50" />
+                        <h3 className="text-lg font-semibold font-serif">Upload your document</h3>
+                        <p className="text-sm">Drag and drop a .txt file here or click to select a file.</p>
+                            {isDragActive && <p className="text-primary mt-2">Drop the file to upload!</p>}
                     </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 min-h-[500px]" onClick={open}>
-                      <Upload className="h-16 w-16 mb-4 text-primary/50" />
-                      <h3 className="text-lg font-semibold font-serif">Upload your document</h3>
-                      <p className="text-sm">Drag and drop a .txt file here or click to select a file.</p>
-                        {isDragActive && <p className="text-primary mt-2">Drop the file to upload!</p>}
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+                    )}
+                </div>
+                </ScrollArea>
+            </CardContent>
+            </Card>
+        </div>
+
+        <div 
+          className="w-2 cursor-col-resize bg-border hover:bg-primary transition-colors"
+          onMouseDown={handleMouseDownPanels}
+        />
 
         {/* AI Tools Panel */}
-        <div className="md:col-span-1 flex flex-col min-h-0">
+        <div style={{ width: `${panelsWidth.right}%` }} className="flex flex-col min-h-0">
             <ScrollArea className="flex-grow">
               <div className="p-4 pl-5">
                   <h2 className="text-lg font-semibold mb-4 font-serif">Document Tools</h2>
