@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +31,32 @@ export default function DashboardPage() {
   const [deepSearchQuery, setDeepSearchQuery] = useState('');
   const [isDeepSearching, setIsDeepSearching] = useState(false);
   const [deepSearchResult, setDeepSearchResult] = useState<DeepSearchOutput | null>(null);
+
+  const [sidebarWidth, setSidebarWidth] = useState(256);
+  const isResizing = useRef(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isResizing.current) {
+      const newWidth = e.clientX;
+      if (newWidth > 200 && newWidth < 500) {
+        setSidebarWidth(newWidth);
+      }
+    }
+  };
+
+  const handleMouseUp = () => {
+    isResizing.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -141,11 +167,14 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen bg-secondary">
         {/* Sidebar */}
-        <nav className="w-64 flex-col border-r bg-background p-4 hidden md:flex">
+        <nav 
+            className="flex-col bg-background p-4 hidden md:flex relative"
+            style={{ width: `${sidebarWidth}px` }}
+        >
             <div className="mb-8">
                 <Logo className="h-20" />
             </div>
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 space-y-2 overflow-y-auto">
                 <Button variant="ghost" className="w-full justify-start text-base py-6 bg-secondary">
                     <FileIcon className="mr-3 h-5 w-5"/>
                     Document Analysis
@@ -186,6 +215,11 @@ export default function DashboardPage() {
                 </Card>
             </div>
         </nav>
+        
+        <div 
+          className="w-2 cursor-col-resize bg-border hover:bg-primary transition-colors"
+          onMouseDown={handleMouseDown}
+        />
 
         {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-0">
