@@ -6,10 +6,12 @@ import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Bot, User, Send, Paperclip, X, File as FileIcon } from 'lucide-react';
+import { Loader2, Bot, User, Send, Paperclip, X, File as FileIcon, LogIn } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { legalChatbot, LegalChatbotInput } from '@/ai/flows/legal-chatbot';
 import Image from 'next/image';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, User as FirebaseUser, OAuthProvider } from 'firebase/auth';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -24,15 +26,29 @@ export default function LegalChatbotPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
-  // Ref to ensure effect runs only once
   const initialLoad = useRef(true);
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        const tokenResult = await currentUser.getIdTokenResult();
+        // This is not the Google Calendar access token, but we handle that in the sign-in flow.
+      } else {
+        setAccessToken(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
-    if (initialLoad.current) {
+    if (initialLoad.current && !user) {
         const query = localStorage.getItem('chatbotQuery');
         const context = localStorage.getItem('chatbotContext');
         const fileName = localStorage.getItem('chatbotFileName');
@@ -52,15 +68,34 @@ export default function LegalChatbotPage() {
             handleSendMessage(query || "Please analyze this document.", `data:text/plain;base64,${btoa(context)}`);
         }
         
-        // Clean up local storage
         localStorage.removeItem('chatbotQuery');
         localStorage.removeItem('chatbotContext');
         localStorage.removeItem('chatbotFileName');
 
         initialLoad.current = false;
     }
-  }, []);
+  }, [user]);
 
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/calendar');
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential) {
+        setAccessToken(credential.accessToken || null);
+      }
+      setUser(result.user);
+    } catch (error) {
+      console.error("Google Sign-In Error", error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    setUser(null);
+    setAccessToken(null);
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const uploadedFile = acceptedFiles[0];
@@ -123,6 +158,7 @@ export default function LegalChatbotPage() {
         const payload: LegalChatbotInput = {
             query: query,
             history: messages,
+            accessToken: accessToken || undefined,
         };
         if(fileDataUri){
             payload.documentDataUri = fileDataUri;
@@ -155,11 +191,22 @@ export default function LegalChatbotPage() {
   return (
     <main className="flex flex-col h-full bg-secondary p-4 md:p-8">
       <Card className="w-full max-w-4xl mx-auto shadow-lg flex flex-col h-full" {...getRootProps()}>
-        <CardHeader>
+        <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle className="font-serif text-2xl flex items-center gap-3">
             <Bot className="h-6 w-6" />
             Legal Question Chatbot
           </CardTitle>
+           {user ? (
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground hidden md:inline">Welcome, {user.displayName}</span>
+              <Button variant="outline" onClick={handleSignOut}>Sign Out</Button>
+            </div>
+          ) : (
+            <Button onClick={handleGoogleSignIn}>
+              <LogIn className="mr-2 h-4 w-4" />
+              Connect Google Calendar
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="flex-1 flex flex-col min-h-0">
           <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollAreaRef}>
@@ -214,7 +261,7 @@ export default function LegalChatbotPage() {
             <div className="relative">
               <input {...getInputProps()} />
               <Textarea
-                placeholder="Ask a legal question..."
+                placeholder="Ask a legal question or a calendar command..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
