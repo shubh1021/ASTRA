@@ -4,22 +4,10 @@ const AstraIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        fill="currentColor"
         {...props}
     >
-        <path d="M4 22h16" />
-        <path d="M6 18h12" />
-        <path d="M6 15h12" />
-        <path d="M12 15v3" />
-        <path d="M8 15v3" />
-        <path d="M16 15v3" />
-        <path d="M5.5 12.5c0-1.5 1-2.5 2-2.5h9c1 0 2 1 2 2.5" />
-        <path d="M5.5 10c0-1.5 1-2.5 2-2.5h9c1 0 2 1 2 2.5" />
-        <path d="M3 5c2-2 4-2 6-2s4 0 6 2" />
+        <path d="M5 22h14v-2H5v2zm1-3h12v-1H6v1zm-3-3h18v-2H3v2zm3.5-11c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 .9-.5 1.7-1.2 2.1-.2.1-.3.2-.3.4v1h-2v-1c0-.2-.1-.3-.3-.4-.7-.4-1.2-1.2-1.2-2.1zm11 0c0-1.4-1.1-2.5-2.5-2.5S14 4.1 14 5.5c0 .9.5 1.7 1.2 2.1.2.1.3.2.3.4v1h2v-1c0-.2.1-.3.3-.4.7-.4 1.2-1.2 1.2-2.1zM6 14h1.5V9H6v5zm3.5 0H11V9H9.5v5zm2 0h1.5V9H11.5v5zm2.5 0H15V9h-1.5v5z" />
     </svg>
 );
 
