@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -12,7 +13,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleSignIn = () => {
-    router.push('/dashboard');
+    router.push('/jurisdiction');
   };
 
   return (
