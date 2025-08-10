@@ -11,6 +11,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import Groq from 'groq-sdk';
 
 // Input Schema
 const DeepSearchInputSchema = z.object({
@@ -36,43 +37,30 @@ export async function deepSearch(input: DeepSearchInput): Promise<DeepSearchOutp
   return deepSearchFlow(input);
 }
 
-// Internal function to perform the web search
+// Internal function to perform the web search with Bing
 async function performWebSearch(query: string): Promise<any> {
-  const serperApiKey = process.env.NEXT_PUBLIC_SERPER_API_KEY;
-  if (!serperApiKey) {
-    throw new Error('SERPER_API_KEY is not set in environment variables.');
+  const bingApiKey = process.env.BING_SEARCH_API_KEY;
+  if (!bingApiKey) {
+    throw new Error('BING_SEARCH_API_KEY is not set in environment variables.');
   }
 
-  const response = await fetch('https://google.serper.dev/search', {
-    method: 'POST',
+  const response = await fetch(`https://api.bing.microsoft.com/v7.0/search?q=${encodeURIComponent(query)}`, {
     headers: {
-      'X-API-KEY': serperApiKey,
-      'Content-Type': 'application/json',
+      'Ocp-Apim-Subscription-Key': bingApiKey,
     },
-    body: JSON.stringify({ q: query }),
   });
 
   if (!response.ok) {
-    throw new Error(`Serper API request failed with status ${response.status}`);
+    throw new Error(`Bing Search API request failed with status ${response.status}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  return (data.webPages?.value || []).map((item: any) => ({
+      title: item.name,
+      url: item.url,
+      snippet: item.snippet,
+  }));
 }
-
-// Genkit Prompt
-const searchAnalysisPrompt = ai.definePrompt({
-    name: 'searchAnalysisPrompt',
-    input: { schema: z.object({ query: z.string(), searchResults: z.any() }) },
-    output: { schema: DeepSearchOutputSchema },
-    prompt: `You are a legal research assistant. Analyze the following search results for the query: "{{query}}".
-    
-    Provide a concise summary, a list of key points, and the top 5 most relevant source URLs.
-    
-    Search Results:
-    {{{searchResults}}}
-    `,
-});
-
 
 // Genkit Flow
 const deepSearchFlow = ai.defineFlow(
@@ -84,8 +72,7 @@ const deepSearchFlow = ai.defineFlow(
   async (input) => {
     const searchData = await performWebSearch(input.query);
 
-    // Limit to top 10 results for analysis
-    const relevantResults = searchData.organic?.slice(0, 10) || [];
+    const relevantResults = searchData.slice(0, 10) || [];
 
     if (relevantResults.length === 0) {
         return {
@@ -95,16 +82,42 @@ const deepSearchFlow = ai.defineFlow(
         };
     }
 
-    const { output } = await searchAnalysisPrompt({
-      query: input.query,
-      searchResults: JSON.stringify(relevantResults, null, 2),
+    const groq = new Groq({
+        apiKey: process.env.GROQ_API_KEY
     });
 
+    const prompt = `You are a legal research assistant. Analyze the following search results for the query: "${input.query}".
+    
+    Provide a concise summary, a list of key points, and the top 5 most relevant source URLs.
+    
+    Search Results:
+    ${JSON.stringify(relevantResults, null, 2)}
+
+    Return your response as a JSON object with the following structure:
+    {
+        "summary": "Your concise summary here.",
+        "keyPoints": ["Key point 1", "Key point 2"],
+        "sources": [
+            {"title": "Source 1 Title", "url": "https://example.com/source1"},
+            {"title": "Source 2 Title", "url": "https://example.com/source2"}
+        ]
+    }
+    `;
+    
+    const chatCompletion = await groq.chat.completions.create({
+        messages: [{ role: 'user', content: prompt }],
+        model: 'llama3-8b-8192', // Or another suitable model
+        response_format: { type: "json_object" },
+    });
+    
+    const output = JSON.parse(chatCompletion.choices[0].message.content || '{}');
+    
     // Ensure we return valid sources even if the model hallucinates
-    const validSources = output!.sources.filter(s => s.url).slice(0, 5);
+    const validSources = (output.sources || []).filter((s: any) => s.url).slice(0, 5);
 
     return {
-        ...output!,
+        summary: output.summary || "No summary generated.",
+        keyPoints: output.keyPoints || [],
         sources: validSources
     };
   }
