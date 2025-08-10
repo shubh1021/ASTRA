@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { File as FileIcon, Search, BrainCircuit, Settings, User, LogOut } from 'lucide-react';
+import { File as FileIcon, Search, BrainCircuit, Settings, User, LogOut, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Logo from '@/components/logo';
 
@@ -46,6 +46,7 @@ export default function DashboardLayout({
     { href: '/dashboard', label: 'Document Analysis', icon: FileIcon },
     { href: '/dashboard/deep-search', label: 'DeepSearch', icon: Search },
     { href: '/dashboard/legal-chatbot', label: 'Legal Question', icon: BrainCircuit },
+    { href: '/dashboard/optimization-assistant', label: 'Optimization', icon: Zap },
   ];
 
   return (
