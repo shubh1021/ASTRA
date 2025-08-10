@@ -39,9 +39,6 @@ export default function Logo({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-2 text-primary", className)}>
         <AstraIcon className="h-full w-auto text-current"/>
-        <span className="text-2xl font-bold font-serif text-current">
-            Astra
-        </span>
     </div>
   );
 }
