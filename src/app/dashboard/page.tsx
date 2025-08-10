@@ -37,8 +37,11 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const [panelsWidth, setPanelsWidth] = useState({ left: 66, right: 34 });
+  const [assistantPanelHeight, setAssistantPanelHeight] = useState(40); // Initial height in percentage
   const isResizingPanels = useRef(false);
+  const isResizingAssistant = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const rightPanelRef = useRef<HTMLDivElement>(null);
   const assistantScrollAreaRef = useRef<HTMLDivElement>(null);
 
 
@@ -205,6 +208,31 @@ export default function DashboardPage() {
     document.removeEventListener('mouseup', handleMouseUpPanels);
   };
 
+  const handleMouseDownAssistant = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingAssistant.current = true;
+    document.addEventListener('mousemove', handleMouseMoveAssistant);
+    document.addEventListener('mouseup', handleMouseUpAssistant);
+  };
+
+  const handleMouseMoveAssistant = (e: MouseEvent) => {
+    if (isResizingAssistant.current && rightPanelRef.current) {
+      const containerRect = rightPanelRef.current.getBoundingClientRect();
+      const newHeight = ((containerRect.bottom - e.clientY) / containerRect.height) * 100;
+
+      if (newHeight > 20 && newHeight < 80) {
+        setAssistantPanelHeight(newHeight);
+      }
+    }
+  };
+
+  const handleMouseUpAssistant = () => {
+    isResizingAssistant.current = false;
+    document.removeEventListener('mousemove', handleMouseMoveAssistant);
+    document.removeEventListener('mouseup', handleMouseUpAssistant);
+  };
+
+
   return (
     <>
       <header className="flex items-center justify-between p-4 border-b bg-background">
@@ -264,129 +292,139 @@ export default function DashboardPage() {
           onMouseDown={handleMouseDownPanels}
         />
 
-        <div style={{ width: `${panelsWidth.right}%` }} className="flex flex-col min-h-0">
-            <ScrollArea className="flex-grow">
-              <div className="p-4 pl-5">
-                  <h2 className="text-lg font-semibold mb-4 font-serif">Document Tools</h2>
-                  <Accordion type="multiple" className="w-full space-y-3" value={activeAccordionItems} onValueChange={setActiveAccordionItems}>
-                  <Card className="shadow-sm">
-                      <AccordionItem value="analysis" className="border-none">
-                      <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
-                          <div className="flex items-center gap-3">
-                              <FileCode className="h-5 w-5" /> Document Analysis
-                          </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-4 pb-4">
-                          {isLoading && !analysisResult ? (
-                          <div className="flex items-center justify-center p-4">
-                              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                          </div>
-                          ) : analysisResult ? (
-                          <div className="space-y-3">
-                              {analysisResult.clauseAnalysis.map((item, index) => (
-                              <div key={index} className="p-3 border rounded-md bg-secondary">
-                                  <div className="flex items-center justify-between mb-2">
-                                  <h4 className="font-semibold text-sm">Clause Analysis</h4>
-                                  <Badge variant="outline" className={cn("text-xs border font-medium", getRiskColor(item.riskLevel))}>
-                                      {item.riskLevel.charAt(0).toUpperCase() + item.riskLevel.slice(1)} Risk
-                                  </Badge>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground italic mb-2">"{item.clause}"</p>
-                                  <p className="text-xs">{item.explanation}</p>
-                              </div>
-                              ))}
-                          </div>
-                          ) : (
-                          <div className="text-center text-muted-foreground text-sm p-4">
-                              <p>Upload a document to analyze clauses for risks.</p>
-                          </div>
-                          )}
-                      </AccordionContent>
-                      </AccordionItem>
-                  </Card>
+        <div ref={rightPanelRef} style={{ width: `${panelsWidth.right}%` }} className="flex flex-col min-h-0">
+            <div style={{ height: `${100 - assistantPanelHeight}%` }}>
+                <ScrollArea className="h-full">
+                <div className="p-4 pl-5">
+                    <h2 className="text-lg font-semibold mb-4 font-serif">Document Tools</h2>
+                    <Accordion type="multiple" className="w-full space-y-3" value={activeAccordionItems} onValueChange={setActiveAccordionItems}>
+                    <Card className="shadow-sm">
+                        <AccordionItem value="analysis" className="border-none">
+                        <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
+                            <div className="flex items-center gap-3">
+                                <FileCode className="h-5 w-5" /> Document Analysis
+                            </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                            {isLoading && !analysisResult ? (
+                            <div className="flex items-center justify-center p-4">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                            </div>
+                            ) : analysisResult ? (
+                            <div className="space-y-3">
+                                {analysisResult.clauseAnalysis.map((item, index) => (
+                                <div key={index} className="p-3 border rounded-md bg-secondary">
+                                    <div className="flex items-center justify-between mb-2">
+                                    <h4 className="font-semibold text-sm">Clause Analysis</h4>
+                                    <Badge variant="outline" className={cn("text-xs border font-medium", getRiskColor(item.riskLevel))}>
+                                        {item.riskLevel.charAt(0).toUpperCase() + item.riskLevel.slice(1)} Risk
+                                    </Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground italic mb-2">"{item.clause}"</p>
+                                    <p className="text-xs">{item.explanation}</p>
+                                </div>
+                                ))}
+                            </div>
+                            ) : (
+                            <div className="text-center text-muted-foreground text-sm p-4">
+                                <p>Upload a document to analyze clauses for risks.</p>
+                            </div>
+                            )}
+                        </AccordionContent>
+                        </AccordionItem>
+                    </Card>
 
-                  <Card className="shadow-sm">
-                      <AccordionItem value="redaction" className="border-none">
-                      <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
-                          <div className="flex items-center gap-3">
-                              <ShieldCheck className="h-5 w-5" /> Redaction Review
-                          </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-4 pb-4">
-                          {isLoading && !redactionResult ? (
-                          <div className="flex items-center justify-center p-4">
-                              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                          </div>
-                          ) : redactionResult ? (
-                          <div className="p-3 border rounded-md bg-secondary space-y-2">
-                              <div className="flex items-center gap-2 text-green-600">
-                              <ShieldCheck className="h-4 w-4"/>
-                              <h4 className="font-semibold text-sm">Redaction Complete</h4>
-                              </div>
-                              <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">{redactionResult.redactedDocument}</p>
-                          </div>
-                          ) : (
-                          <div className="text-center text-muted-foreground text-sm p-4">
-                              <p>Upload a document to find and redact sensitive info.</p>
-                          </div>
-                          )}
-                      </AccordionContent>
-                      </AccordionItem>
-                  </Card>
-                  </Accordion>
-              </div>
-          </ScrollArea>
-          <div className="p-4 pl-5 border-t mt-auto">
-              <h3 className="text-base font-semibold mb-2 flex items-center gap-2 font-serif"><Bot className="h-5 w-5" /> Document Assistant</h3>
-              <Card className="p-3 shadow-sm flex flex-col h-[250px]">
-                  <ScrollArea className="flex-1 pr-2 -mr-2" ref={assistantScrollAreaRef}>
-                      <div className="space-y-4">
-                        {assistantMessages.map((msg, index) => (
-                            <div key={index} className={cn("flex items-start gap-2", msg.role === 'user' && 'justify-end')}>
-                                {msg.role === 'assistant' && <Bot className="h-5 w-5 text-primary flex-shrink-0 mt-1" />}
-                                <div className={cn("rounded-lg p-2 text-sm max-w-[90%]", msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary')}>
-                                    {msg.content}
-                                </div>
+                    <Card className="shadow-sm">
+                        <AccordionItem value="redaction" className="border-none">
+                        <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
+                            <div className="flex items-center gap-3">
+                                <ShieldCheck className="h-5 w-5" /> Redaction Review
                             </div>
-                        ))}
-                        {isAssistantLoading && (
-                            <div className="flex items-start gap-2">
-                                <Bot className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
-                                <div className="rounded-lg p-2 text-sm bg-secondary flex items-center">
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                            {isLoading && !redactionResult ? (
+                            <div className="flex items-center justify-center p-4">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
                             </div>
-                        )}
-                      </div>
-                  </ScrollArea>
-                  <div className="mt-2 relative">
-                      <Textarea 
-                        placeholder="Ask about this document..." 
-                        className="bg-background pr-10 text-sm" 
-                        rows={2}
-                        value={assistantQuery}
-                        onChange={(e) => setAssistantQuery(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleAssistantSend();
-                            }
-                        }}
-                        />
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                            onClick={handleAssistantSend}
-                            disabled={!assistantQuery.trim() || !documentText.trim() || isAssistantLoading}
-                        >
-                          <Send className="h-4 w-4" />
-                      </Button>
-                  </div>
-              </Card>
-          </div>
-        </div>
+                            ) : redactionResult ? (
+                            <div className="p-3 border rounded-md bg-secondary space-y-2">
+                                <div className="flex items-center gap-2 text-green-600">
+                                <ShieldCheck className="h-4 w-4"/>
+                                <h4 className="font-semibold text-sm">Redaction Complete</h4>
+                                </div>
+                                <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">{redactionResult.redactedDocument}</p>
+                            </div>
+                            ) : (
+                            <div className="text-center text-muted-foreground text-sm p-4">
+                                <p>Upload a document to find and redact sensitive info.</p>
+                            </div>
+                            )}
+                        </AccordionContent>
+                        </AccordionItem>
+                    </Card>
+                    </Accordion>
+                </div>
+            </ScrollArea>
+            </div>
+            
+            <div 
+                className="h-2 cursor-row-resize bg-border hover:bg-primary transition-colors"
+                onMouseDown={handleMouseDownAssistant}
+            />
+
+            <div style={{ height: `${assistantPanelHeight}%` }} className="flex flex-col min-h-0">
+                <div className="p-4 pl-5 border-t flex-1 flex flex-col min-h-0">
+                    <h3 className="text-base font-semibold mb-2 flex items-center gap-2 font-serif"><Bot className="h-5 w-5" /> Document Assistant</h3>
+                    <Card className="p-3 shadow-sm flex flex-col flex-1 min-h-0">
+                        <ScrollArea className="flex-1 pr-2 -mr-2" ref={assistantScrollAreaRef}>
+                            <div className="space-y-4">
+                                {assistantMessages.map((msg, index) => (
+                                    <div key={index} className={cn("flex items-start gap-2", msg.role === 'user' && 'justify-end')}>
+                                        {msg.role === 'assistant' && <Bot className="h-5 w-5 text-primary flex-shrink-0 mt-1" />}
+                                        <div className={cn("rounded-lg p-2 text-sm max-w-[90%]", msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary')}>
+                                            {msg.content}
+                                        </div>
+                                    </div>
+                                ))}
+                                {isAssistantLoading && (
+                                    <div className="flex items-start gap-2">
+                                        <Bot className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
+                                        <div className="rounded-lg p-2 text-sm bg-secondary flex items-center">
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </ScrollArea>
+                        <div className="mt-2 relative">
+                            <Textarea 
+                                placeholder="Ask about this document..." 
+                                className="bg-background pr-10 text-sm" 
+                                rows={2}
+                                value={assistantQuery}
+                                onChange={(e) => setAssistantQuery(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleAssistantSend();
+                                    }
+                                }}
+                                />
+                                <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                                    onClick={handleAssistantSend}
+                                    disabled={!assistantQuery.trim() || !documentText.trim() || isAssistantLoading}
+                                >
+                                <Send className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </Card>
+                </div>
+            </div>
       </main>
     </>
   );
-}
+
+    

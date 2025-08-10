@@ -11,7 +11,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import Groq from 'groq-sdk';
 
 // Input Schema
 const DeepSearchInputSchema = z.object({
@@ -66,6 +65,25 @@ async function performWebSearch(query: string): Promise<any> {
   }));
 }
 
+const analysisPrompt = ai.definePrompt({
+    name: "deepSearchAnalysisPrompt",
+    input: { schema: z.object({ query: z.string(), documentContext: z.string().optional(), searchResults: z.string() }) },
+    output: { schema: DeepSearchOutputSchema },
+    prompt: `You are a legal research assistant. Analyze the following search results for the query: "{{query}}".
+    
+    {{#if documentContext}}
+    The user has provided the following document for additional context:
+    {{media url=documentContext}}
+    {{/if}}
+
+    Provide a concise summary, a list of key points, and the top 5 most relevant source URLs.
+    
+    Search Results:
+    {{{searchResults}}}
+    `,
+});
+
+
 // Genkit Flow
 const deepSearchFlow = ai.defineFlow(
   {
@@ -85,49 +103,20 @@ const deepSearchFlow = ai.defineFlow(
             sources: []
         };
     }
-
-    const groq = new Groq({
-        apiKey: process.env.GROQ_API_KEY
+    
+    const { output } = await analysisPrompt({
+        query: input.query,
+        documentContext: input.documentDataUri,
+        searchResults: JSON.stringify(relevantResults, null, 2),
     });
 
-    const documentContext = input.documentDataUri 
-        ? `The user has provided the following document for additional context: ${input.documentDataUri.startsWith('data:image') ? 'An image is attached.' : 'A text document is attached.'}\n\n`
-        : '';
-
-    const prompt = `You are a legal research assistant. Analyze the following search results for the query: "${input.query}".
-    
-    ${documentContext}
-    Provide a concise summary, a list of key points, and the top 5 most relevant source URLs.
-    
-    Search Results:
-    ${JSON.stringify(relevantResults, null, 2)}
-
-    Return your response as a JSON object with the following structure:
-    {
-        "summary": "Your concise summary here.",
-        "keyPoints": ["Key point 1", "Key point 2"],
-        "sources": [
-            {"title": "Source 1 Title", "url": "https://example.com/source1"},
-            {"title": "Source 2 Title", "url": "https://example.com/source2"}
-        ]
+    if (!output) {
+        return {
+            summary: "Failed to generate an analysis from the search results.",
+            keyPoints: [],
+            sources: [],
+        };
     }
-    `;
-    
-    const messages: any = [{ role: 'user', content: prompt }];
-    if (input.documentDataUri) {
-        messages[0].content = [
-            { type: "text", text: prompt },
-        ];
-    }
-
-
-    const chatCompletion = await groq.chat.completions.create({
-        messages: [{ role: 'user', content: prompt }],
-        model: 'llama3-8b-8192', // Or another suitable model
-        response_format: { type: "json_object" },
-    });
-    
-    const output = JSON.parse(chatCompletion.choices[0].message.content || '{}');
     
     // Ensure we return valid sources even if the model hallucinates
     const validSources = (output.sources || []).filter((s: any) => s.url).slice(0, 5);
