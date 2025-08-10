@@ -1,11 +1,10 @@
-
 "use client";
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Scale } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -51,17 +50,17 @@ export default function JurisdictionPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4">
-       <div 
-        className="absolute inset-0 -z-10 bg-cover bg-center"
-        style={{ backgroundImage: "url('/grid-bg.svg')"}}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
-      </div>
-      <div className="w-full max-w-4xl">
-        <Card className="bg-secondary/30 p-8 shadow-2xl">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-secondary p-4">
+       <div className="w-full max-w-4xl">
+        <Card className="p-8 shadow-lg">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold">Choose your jurisdiction</h1>
+            <Link href="/" className="flex items-center justify-center gap-2 mb-6">
+                <Scale className="h-8 w-8 text-primary" />
+                <span className="text-3xl font-bold font-serif">
+                    LexAI
+                </span>
+            </Link>
+            <h1 className="font-serif text-3xl font-bold">Choose your jurisdiction</h1>
             <p className="text-muted-foreground mt-2">Select the legal system you want to work with.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -72,8 +71,8 @@ export default function JurisdictionPage() {
                 className={cn(
                   "flex items-center text-left p-4 rounded-lg border-2 transition-colors",
                   selectedJurisdiction === j.code
-                    ? "border-primary bg-primary/10"
-                    : "border-border bg-background/30 hover:bg-background/70"
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-transparent hover:bg-secondary"
                 )}
               >
                 <div className="flex-shrink-0 w-12 text-2xl font-bold text-muted-foreground">{j.code}</div>
@@ -81,7 +80,7 @@ export default function JurisdictionPage() {
                   <h3 className="font-semibold">{j.name}</h3>
                   <p className="text-sm text-muted-foreground">{j.description}</p>
                 </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground ml-4" />
+                {selectedJurisdiction === j.code && <ChevronRight className="h-5 w-5 text-primary ml-4" />}
               </button>
             ))}
           </div>
@@ -92,7 +91,7 @@ export default function JurisdictionPage() {
                 disabled={!selectedJurisdiction}
                 className="w-full max-w-xs"
               >
-                Continue to Services
+                Continue
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             <p className="text-muted-foreground text-sm mt-4">

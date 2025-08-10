@@ -3,12 +3,12 @@ import { Scale } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer id="contact" className="bg-secondary/20 border-t border-border">
+    <footer id="contact" className="bg-secondary border-t">
       <div className="container max-w-7xl py-12 md:py-16">
         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2">
             <Scale className="h-7 w-7 text-primary" />
-            <span className="text-2xl font-bold">
+            <span className="font-serif text-2xl font-bold">
               LexAI
             </span>
           </div>
@@ -27,7 +27,7 @@ export default function Footer() {
             </Link>
           </nav>
         </div>
-        <div className="mt-8 border-t border-border pt-8 text-center text-sm text-muted-foreground">
+        <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} LexAI, Inc. All rights reserved.</p>
         </div>
       </div>

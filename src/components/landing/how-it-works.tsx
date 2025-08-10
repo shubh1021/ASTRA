@@ -23,7 +23,7 @@ export default function HowItWorks() {
     <section id="how-it-works" className="py-20 md:py-28">
       <div className="container max-w-7xl">
         <div className="text-center">
-          <h2 className="text-4xl font-bold tracking-tight">Get Started in Three Simple Steps</h2>
+          <h2 className="font-serif text-4xl font-bold tracking-tight">Get Started in Three Simple Steps</h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
             Our intuitive workflow makes complex legal analysis effortless.
           </p>
@@ -37,7 +37,7 @@ export default function HowItWorks() {
               <div className="bg-primary/10 p-5 rounded-full mb-6 border-4 border-background">
                 {step.icon}
               </div>
-              <h3 className="text-2xl font-semibold mb-2">{step.title}</h3>
+              <h3 className="font-serif text-2xl font-semibold mb-2">{step.title}</h3>
               <p className="text-muted-foreground">{step.description}</p>
             </div>
           ))}

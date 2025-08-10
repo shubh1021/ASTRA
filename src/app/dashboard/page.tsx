@@ -1,19 +1,20 @@
 
 "use client";
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { analyzeLegalClauses, AnalyzeLegalClausesOutput } from '@/ai/flows/analyze-legal-clauses';
 import { redactSensitiveData, RedactSensitiveDataOutput } from '@/ai/flows/redact-sensitive-data';
-import { Loader2, ShieldCheck, FileCode, Bot, Globe, ArrowLeft, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send } from 'lucide-react';
+import { Loader2, ShieldCheck, FileCode, Bot, Globe, ArrowLeft, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send, Settings, User, LogOut, Scale, File as FileIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function DashboardPage() {
   const [documentText, setDocumentText] = useState('');
@@ -47,7 +48,7 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({ 
     onDrop,
     noClick: true,
     noKeyboard: true,
@@ -84,43 +85,77 @@ export default function DashboardPage() {
   const getRiskColor = (riskLevel: 'low' | 'medium' | 'high') => {
     switch (riskLevel) {
       case 'low':
-        return 'bg-green-500/20 text-green-400 border-green-500/30';
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'medium':
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'high':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
+        return 'bg-red-100 text-red-800 border-red-200';
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const { open } = useDropzone({
-    onDrop,
-     accept: {
-        'text/plain': ['.txt'],
-    } 
-  });
-
-
   return (
-    <div className="flex h-screen bg-secondary/30 text-foreground">
+    <div className="flex h-screen bg-secondary">
+        {/* Sidebar */}
+        <nav className="w-64 flex-col border-r bg-background p-4 hidden md:flex">
+            <div className="flex items-center gap-2 mb-8">
+                <Scale className="h-7 w-7 text-primary" />
+                <span className="text-2xl font-bold font-serif">LexAI</span>
+            </div>
+            <div className="flex-1 space-y-2">
+                <Button variant="ghost" className="w-full justify-start text-base py-6 bg-secondary">
+                    <FileIcon className="mr-3 h-5 w-5"/>
+                    Document Analysis
+                </Button>
+                <Button variant="ghost" className="w-full justify-start text-base py-6">
+                    <Search className="mr-3 h-5 w-5"/>
+                    DeepSearch
+                </Button>
+            </div>
+            <div className="mt-auto space-y-2">
+                 <Button variant="ghost" className="w-full justify-start">
+                    <Settings className="mr-3 h-5 w-5"/>
+                    Settings
+                </Button>
+                 <Button variant="ghost" className="w-full justify-start">
+                    <User className="mr-3 h-5 w-5"/>
+                    Account
+                </Button>
+                 <Link href="/login">
+                    <Button variant="ghost" className="w-full justify-start">
+                        <LogOut className="mr-3 h-5 w-5"/>
+                        Logout
+                    </Button>
+                </Link>
+                <Card className="bg-secondary">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                            <Avatar>
+                                <AvatarImage src="https://github.com/shadcn.png" />
+                                <AvatarFallback>CN</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-semibold">User</p>
+                                <p className="text-xs text-muted-foreground">user@example.com</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </nav>
+
+        {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-0">
-        <header className="flex items-center justify-between p-4 border-b border-border bg-background">
-          <div className="flex items-center gap-4">
-            <Link href="/jurisdiction">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <h1 className="text-xl font-semibold">Document Workspace</h1>
-          </div>
+        <header className="flex items-center justify-between p-4 border-b bg-background">
+            <h1 className="text-xl font-semibold font-serif">Document Workspace</h1>
         </header>
 
-        <main className="flex-1 grid md:grid-cols-3 gap-1 min-h-0">
+        <main className="flex-1 grid md:grid-cols-3 gap-1 min-h-0 p-4 bg-secondary">
           {/* Document Viewer */}
-          <div className="md:col-span-2 flex flex-col bg-background p-4 min-h-0" {...getRootProps()}>
+          <Card className="md:col-span-2 flex flex-col min-h-0 shadow-sm" {...getRootProps()}>
             <input {...getInputProps()} />
-             <div className="flex items-center justify-between p-2 border-b border-border">
+             <CardHeader className="flex-row items-center justify-between p-3 border-b">
                 <div className="flex items-center gap-2 text-sm font-medium">
                     {fileName ? (
                         <>
@@ -128,29 +163,29 @@ export default function DashboardPage() {
                         <span>{fileName}</span>
                         </>
                     ) : (
-                         <span>No document uploaded</span>
+                         <span className="text-muted-foreground">No document uploaded</span>
                     )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon"><Search className="h-5 w-5" /></Button>
-                    <span className="text-sm font-semibold">100%</span>
-                    <Button variant="ghost" size="icon"><ZoomIn className="h-5 w-5" /></Button>
                     <Button variant="ghost" size="icon"><ZoomOut className="h-5 w-5" /></Button>
+                    <span className="text-sm font-semibold px-2">100%</span>
+                    <Button variant="ghost" size="icon"><ZoomIn className="h-5 w-5" /></Button>
                     <Button variant="ghost" size="icon"><RotateCw className="h-5 w-5" /></Button>
                     <Button variant="outline" size="sm" onClick={open}><Upload className="mr-2 h-4 w-4" /> New Document</Button>
                 </div>
-            </div>
+            </CardHeader>
             <CardContent className="flex-1 p-2 mt-2 min-h-0">
               <ScrollArea className="h-full">
-                <div className={cn("h-full w-full rounded-lg border bg-background", isDragActive && "border-primary")}>
+                <div className={cn("h-full w-full rounded-lg", isDragActive && "border-primary border-dashed border-2 bg-primary/5")}>
                   {documentText ? (
-                      <div className="p-8 whitespace-pre-wrap text-sm leading-relaxed">
+                      <div className="p-6 whitespace-pre-wrap text-sm leading-relaxed">
                           {documentText}
                       </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8 min-h-[500px]" onClick={open}>
                         <Upload className="h-16 w-16 mb-4 text-primary/50" />
-                        <h3 className="text-lg font-semibold">Upload your document</h3>
+                        <h3 className="text-lg font-semibold font-serif">Upload your document</h3>
                         <p className="text-sm">Drag and drop a .txt file here or click to select a file.</p>
                          {isDragActive && <p className="text-primary mt-2">Drop the file to upload!</p>}
                     </div>
@@ -158,15 +193,15 @@ export default function DashboardPage() {
                 </div>
               </ScrollArea>
             </CardContent>
-          </div>
+          </Card>
           
           {/* AI Tools Panel */}
-          <aside className="md:col-span-1 flex flex-col bg-background border-l border-border">
+          <div className="md:col-span-1 flex flex-col min-h-0">
              <ScrollArea className="flex-grow">
-                <div className="p-4">
-                    <h2 className="text-lg font-semibold mb-4">Document Tools</h2>
+                <div className="p-4 pl-5">
+                    <h2 className="text-lg font-semibold mb-4 font-serif">Document Tools</h2>
                     <Accordion type="multiple" className="w-full space-y-3" defaultValue={["analysis", "redaction", "deepsearch"]}>
-                    <Card className="bg-secondary/30">
+                    <Card className="shadow-sm">
                         <AccordionItem value="analysis" className="border-none">
                         <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
                             <div className="flex items-center gap-3">
@@ -181,10 +216,10 @@ export default function DashboardPage() {
                             ) : analysisResult ? (
                             <div className="space-y-3">
                                 {analysisResult.clauseAnalysis.map((item, index) => (
-                                <div key={index} className="p-3 border rounded-md bg-background/50">
+                                <div key={index} className="p-3 border rounded-md bg-secondary">
                                     <div className="flex items-center justify-between mb-2">
                                     <h4 className="font-semibold text-sm">Clause Analysis</h4>
-                                    <Badge className={cn("text-xs border", getRiskColor(item.riskLevel))}>
+                                    <Badge variant="outline" className={cn("text-xs border font-medium", getRiskColor(item.riskLevel))}>
                                         {item.riskLevel.charAt(0).toUpperCase() + item.riskLevel.slice(1)} Risk
                                     </Badge>
                                     </div>
@@ -202,7 +237,7 @@ export default function DashboardPage() {
                         </AccordionItem>
                     </Card>
 
-                    <Card className="bg-secondary/30">
+                    <Card className="shadow-sm">
                         <AccordionItem value="redaction" className="border-none">
                         <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
                             <div className="flex items-center gap-3">
@@ -215,8 +250,8 @@ export default function DashboardPage() {
                                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                             </div>
                             ) : redactionResult ? (
-                            <div className="p-3 border rounded-md bg-background/50 space-y-2">
-                                <div className="flex items-center gap-2 text-green-400">
+                            <div className="p-3 border rounded-md bg-secondary space-y-2">
+                                <div className="flex items-center gap-2 text-green-600">
                                 <ShieldCheck className="h-4 w-4"/>
                                 <h4 className="font-semibold text-sm">Redaction Complete</h4>
                                 </div>
@@ -231,7 +266,7 @@ export default function DashboardPage() {
                         </AccordionItem>
                     </Card>
 
-                    <Card className="bg-secondary/30">
+                    <Card className="shadow-sm">
                     <AccordionItem value="deepsearch" className="border-none">
                         <AccordionTrigger className="p-4 font-semibold text-base hover:no-underline">
                             <div className="flex items-center gap-3">
@@ -248,10 +283,10 @@ export default function DashboardPage() {
                     </Accordion>
                 </div>
             </ScrollArea>
-            <div className="p-4 border-t border-border mt-auto">
-                <h3 className="text-base font-semibold mb-2 flex items-center gap-2"><Bot className="h-5 w-5" /> Document Assistant</h3>
-                <Card className="bg-secondary/30 p-3">
-                    <div className="bg-background/50 p-2 rounded-md text-sm text-muted-foreground">
+            <div className="p-4 pl-5 border-t mt-auto">
+                <h3 className="text-base font-semibold mb-2 flex items-center gap-2 font-serif"><Bot className="h-5 w-5" /> Document Assistant</h3>
+                <Card className="p-3 shadow-sm">
+                    <div className="bg-secondary p-2 rounded-md text-sm text-muted-foreground">
                         I'm here to help with questions about your document. Ask me anything!
                     </div>
                     <div className="mt-2 relative">
@@ -262,7 +297,7 @@ export default function DashboardPage() {
                     </div>
                 </Card>
             </div>
-          </aside>
+          </div>
         </main>
       </div>
     </div>

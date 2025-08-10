@@ -1,9 +1,10 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { Inter } from 'next/font/google';
+import { Inter, Lora } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const lora = Lora({ subsets: ['latin'], variable: '--font-lora' });
 
 export const metadata: Metadata = {
   title: 'LexAI',
@@ -16,8 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark !scroll-smooth">
-      <body className={`${inter.className} antialiased`}>
+    <html lang="en" className="!scroll-smooth">
+      <body className={`${inter.variable} ${lora.variable} font-sans`}>
         {children}
         <Toaster />
       </body>

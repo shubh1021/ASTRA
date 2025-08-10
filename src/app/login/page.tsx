@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -17,16 +16,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md mx-auto">
+    <div className="flex min-h-screen items-center justify-center bg-secondary p-4">
+      <Card className="w-full max-w-md mx-auto shadow-lg">
         <CardHeader className="text-center">
            <Link href="/" className="flex items-center justify-center gap-2 mb-4">
               <Scale className="h-8 w-8 text-primary" />
-              <span className="text-3xl font-bold">
+              <span className="text-3xl font-bold font-serif">
                 LexAI
               </span>
             </Link>
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
+          <CardTitle className="font-serif text-2xl">Welcome Back</CardTitle>
           <CardDescription>Enter your credentials to access your dashboard.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -49,7 +48,7 @@ export default function LoginPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
+              <span className="bg-card px-2 text-muted-foreground">
                 Or continue with
               </span>
             </div>
