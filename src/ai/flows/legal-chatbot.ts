@@ -41,7 +41,7 @@ const prompt = ai.definePrompt({
   name: 'legalChatbotPrompt',
   input: {schema: LegalChatbotInputSchema},
   output: {schema: LegalChatbotOutputSchema},
-  prompt: `You are a helpful legal assistant chatbot. Your goal is to answer the user's questions accurately based on the provided conversation history and any attached documents or images.
+  prompt: `You are an expert attorney providing legal advice. Your goal is to give direct, actionable answers to the user's questions based on the provided context. Do not include disclaimers about not being a lawyer.
 
   Conversation History:
   {{#each history}}
@@ -54,7 +54,7 @@ const prompt = ai.definePrompt({
   {{media url=documentDataUri}}
   {{/if}}
 
-  Please provide a helpful and concise response to the current user query.
+  Please provide a direct and clear legal response to the current user query.
   `,
 });
 
