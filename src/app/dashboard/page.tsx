@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { analyzeLegalClauses, AnalyzeLegalClausesOutput } from '@/ai/flows/analyze-legal-clauses';
 import { redactSensitiveData, RedactSensitiveDataOutput } from '@/ai/flows/redact-sensitive-data';
-import { deepSearch } from '@/ai/flows/deep-search';
 import { Loader2, ShieldCheck, FileCode, Bot, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -16,7 +15,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRouter } from 'next/navigation';
 
-
 export default function DashboardPage() {
   const [documentText, setDocumentText] = useState('');
   const [fileName, setFileName] = useState('');
@@ -24,13 +22,13 @@ export default function DashboardPage() {
   const [analysisResult, setAnalysisResult] = useState<AnalyzeLegalClausesOutput | null>(null);
   const [redactionResult, setRedactionResult] = useState<RedactSensitiveDataOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [assistantQuery, setAssistantQuery] = useState('');
   const [activeAccordionItems, setActiveAccordionItems] = useState(["analysis", "redaction"]);
   const router = useRouter();
 
   const [panelsWidth, setPanelsWidth] = useState({ left: 66, right: 34 });
   const isResizingPanels = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -95,13 +93,18 @@ export default function DashboardPage() {
   const handleTextSelection = async () => {
     const selectedText = window.getSelection()?.toString().trim();
     if (selectedText && selectedText.length > 0) {
-        setActiveAccordionItems(["analysis", "redaction"]);
-        handleAnalyze(selectedText);
         localStorage.setItem('deepSearchQuery', selectedText);
         router.push('/dashboard/deep-search');
     }
   };
 
+  const handleAssistantSend = () => {
+    if (!assistantQuery.trim()) return;
+    localStorage.setItem('chatbotQuery', assistantQuery);
+    localStorage.setItem('chatbotContext', documentText);
+    localStorage.setItem('chatbotFileName', fileName);
+    router.push('/dashboard/legal-chatbot');
+  };
 
   const getRiskColor = (riskLevel: 'low' | 'medium' | 'high') => {
     switch (riskLevel) {
@@ -280,8 +283,26 @@ export default function DashboardPage() {
                       I'm here to help with questions about your document. Ask me anything!
                   </div>
                   <div className="mt-2 relative">
-                      <Textarea placeholder="Ask about this document..." className="bg-background pr-10 text-sm" rows={2}/>
-                        <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8">
+                      <Textarea 
+                        placeholder="Ask about this document..." 
+                        className="bg-background pr-10 text-sm" 
+                        rows={2}
+                        value={assistantQuery}
+                        onChange={(e) => setAssistantQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleAssistantSend();
+                            }
+                        }}
+                        />
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                            onClick={handleAssistantSend}
+                            disabled={!assistantQuery.trim() || !documentText.trim()}
+                        >
                           <Send className="h-4 w-4" />
                       </Button>
                   </div>

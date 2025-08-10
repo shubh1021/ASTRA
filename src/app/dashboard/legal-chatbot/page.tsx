@@ -26,6 +26,41 @@ export default function LegalChatbotPage() {
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  // Ref to ensure effect runs only once
+  const initialLoad = useRef(true);
+
+
+  useEffect(() => {
+    if (initialLoad.current) {
+        const query = localStorage.getItem('chatbotQuery');
+        const context = localStorage.getItem('chatbotContext');
+        const fileName = localStorage.getItem('chatbotFileName');
+
+        if (query) {
+            setInput(query);
+        }
+
+        if (context) {
+            const initialMessage: Message = {
+                role: 'user',
+                content: query || "Please analyze this document.",
+                filePreview: `data:text/plain;base64,${btoa(context)}`,
+                fileName: fileName || "document.txt"
+            };
+            setMessages([initialMessage]);
+            handleSendMessage(query || "Please analyze this document.", `data:text/plain;base64,${btoa(context)}`);
+        }
+        
+        // Clean up local storage
+        localStorage.removeItem('chatbotQuery');
+        localStorage.removeItem('chatbotContext');
+        localStorage.removeItem('chatbotFileName');
+
+        initialLoad.current = false;
+    }
+  }, []);
+
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const uploadedFile = acceptedFiles[0];
@@ -51,7 +86,6 @@ export default function LegalChatbotPage() {
   });
 
   const scrollToBottom = () => {
-      // Use a timeout to ensure the DOM has updated
       setTimeout(() => {
           const scrollableViewport = (scrollAreaRef.current?.firstChild as HTMLElement)?.firstChild as HTMLElement;
           if (scrollableViewport) {
@@ -60,17 +94,24 @@ export default function LegalChatbotPage() {
       }, 100)
   };
 
-  const handleSendMessage = async () => {
-    if (!input.trim() && !file) return;
+  const handleSendMessage = async (currentInput?: string, currentFilePreview?: string) => {
+    const query = currentInput ?? input;
+    const fileDataUri = currentFilePreview ?? filePreview;
+
+    if (!query.trim() && !fileDataUri) return;
 
     const userMessage: Message = { 
         role: 'user', 
-        content: input,
-        ...(file && { filePreview, fileName: file.name }),
+        content: query,
+        ...(fileDataUri && { filePreview: fileDataUri, fileName: file?.name || "Uploaded File" }),
     };
 
-    const newMessages: Message[] = [...messages, userMessage];
-    setMessages(newMessages);
+    const newMessages: Message[] = messages.find(m => m.filePreview === fileDataUri) ? [...messages] : [...messages, userMessage];
+    
+    if(!currentInput) {
+        setMessages(newMessages);
+    }
+
     setInput('');
     setFile(null);
     setFilePreview(null);
@@ -80,11 +121,11 @@ export default function LegalChatbotPage() {
 
     try {
         const payload: LegalChatbotInput = {
-            query: input,
+            query: query,
             history: messages,
         };
-        if(filePreview){
-            payload.documentDataUri = filePreview;
+        if(fileDataUri){
+            payload.documentDataUri = fileDataUri;
         }
 
         const result = await legalChatbot(payload);
@@ -191,7 +232,7 @@ export default function LegalChatbotPage() {
                 </Button>
                 <Button
                     size="icon"
-                    onClick={handleSendMessage}
+                    onClick={() => handleSendMessage()}
                     disabled={isLoading || (!input.trim() && !file)}
                 >
                     <Send className="h-5 w-5" />
