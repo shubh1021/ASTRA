@@ -108,31 +108,8 @@ export default function DashboardPage() {
   const handleTextSelection = async () => {
     const selectedText = window.getSelection()?.toString().trim();
     if (selectedText && selectedText.length > 10) { 
-        setIsLoading(true);
-        setError(null);
-        setAnalysisResult(null);
-        setRedactionResult(null);
-
-        try {
-            const analysisPromise = analyzeLegalClauses({ documentText: selectedText });
-            const redactionPromise = redactSensitiveData({ documentText: selectedText });
-
-            const [analysis, redaction] = await Promise.all([analysisPromise, redactionPromise]);
-            
-            setAnalysisResult(analysis);
-            setRedactionResult(redaction);
-            
-            setActiveAccordionItems(["analysis", "redaction"]);
-
-            localStorage.setItem('deepSearchQuery', selectedText);
-            router.push('/dashboard/deep-search');
-
-        } catch (e) {
-            setError('An error occurred during analysis of the selected text. Please try again.');
-            console.error(e);
-        } finally {
-            setIsLoading(false);
-        }
+        localStorage.setItem('deepSearchQuery', selectedText);
+        router.push('/dashboard/deep-search');
     }
   };
 
@@ -244,8 +221,7 @@ export default function DashboardPage() {
 
       <main ref={containerRef} className="flex-1 flex min-h-0 p-4 bg-secondary gap-1">
         <div style={{ width: `${panelsWidth.left}%` }}>
-            <Card className="h-full flex flex-col min-h-0 shadow-sm" {...getRootProps()}>
-            <input {...getInputProps()} />
+            <Card className="h-full flex flex-col min-h-0 shadow-sm">
                 <CardHeader className="flex-row items-center justify-between p-3 border-b">
                 <div className="flex items-center gap-2 text-sm font-medium">
                     {fileName ? (
@@ -268,7 +244,8 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="flex-1 p-2 mt-2 min-h-0">
                 <ScrollArea className="h-full">
-                <div className={cn("h-full w-full rounded-lg", isDragActive && "border-primary border-dashed border-2 bg-primary/5")}>
+                <div {...getRootProps()} className={cn("h-full w-full rounded-lg", isDragActive && "border-primary border-dashed border-2 bg-primary/5")}>
+                    <input {...getInputProps()} />
                     {documentText ? (
                         <div onMouseUp={handleTextSelection} className="p-6 whitespace-pre-wrap text-sm leading-relaxed">
                             {documentText}
@@ -423,8 +400,8 @@ export default function DashboardPage() {
                     </Card>
                 </div>
             </div>
+        </div>
       </main>
     </>
   );
-
-    
+}
