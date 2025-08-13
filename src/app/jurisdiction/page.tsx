@@ -41,6 +41,16 @@ const jurisdictions = [
     name: 'France',
     description: 'French civil law',
   },
+  {
+    code: 'IN',
+    name: 'India',
+    description: 'Indian legal system',
+  },
+  {
+    code: 'SE',
+    name: 'Sweden',
+    description: 'Swedish civil law',
+  },
 ];
 
 export default function JurisdictionPage() {
