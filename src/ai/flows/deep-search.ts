@@ -15,6 +15,7 @@ import { z } from 'genkit';
 // Input Schema
 const DeepSearchInputSchema = z.object({
   query: z.string().describe('The legal query or topic to search for clauses about.'),
+  jurisdiction: z.string().describe('The legal jurisdiction to consider for the search.'),
   documentDataUri: z.string().optional().describe(
     "An optional document or image file for context, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
   ),
@@ -41,14 +42,14 @@ export async function deepSearch(input: DeepSearchInput): Promise<DeepSearchOutp
 }
 
 // Internal function to perform the web search with Brave
-async function performWebSearch(query: string): Promise<any> {
+async function performWebSearch(query: string, jurisdiction: string): Promise<any> {
   const braveApiKey = process.env.BRAVE_SEARCH_API_KEY;
   if (!braveApiKey) {
     throw new Error('BRAVE_SEARCH_API_KEY is not set in environment variables.');
   }
 
   // Refine the query for better accuracy
-  const refinedQuery = `${query} legal clause`;
+  const refinedQuery = `${query} legal clause in ${jurisdiction}`;
 
   const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(refinedQuery)}`, {
     headers: {
@@ -71,10 +72,11 @@ async function performWebSearch(query: string): Promise<any> {
 
 const analysisPrompt = ai.definePrompt({
     name: "deepSearchClauseAnalysisPrompt",
-    input: { schema: z.object({ query: z.string(), documentContext: z.string().optional(), searchResults: z.string() }) },
+    input: { schema: z.object({ query: z.string(), jurisdiction: z.string(), documentContext: z.string().optional(), searchResults: z.string() }) },
     output: { schema: DeepSearchOutputSchema },
-    prompt: `You are a highly efficient legal research AI. Your task is to analyze the provided web search results and extract relevant legal clauses based on the user's query.
+    prompt: `You are a highly efficient legal research AI. Your task is to analyze the provided web search results and extract relevant legal clauses based on the user's query and a specific legal jurisdiction.
 
+    Jurisdiction for this search: "{{jurisdiction}}"
     User's Query: "{{query}}"
     
     {{#if documentContext}}
@@ -85,7 +87,7 @@ const analysisPrompt = ai.definePrompt({
     Analyze the search results below. For each relevant result, you must:
     1. Extract the specific legal clause text.
     2. Identify the source title and URL.
-    3. Provide a brief explanation of its relevance to the user's query.
+    3. Provide a brief explanation of its relevance to the user's query, considering the laws of "{{jurisdiction}}".
     
     Return a list of these clauses. Focus on accuracy and relevance. Do not summarize; extract the clauses directly.
 
@@ -103,7 +105,7 @@ const deepSearchFlow = ai.defineFlow(
     outputSchema: DeepSearchOutputSchema,
   },
   async (input) => {
-    const searchData = await performWebSearch(input.query);
+    const searchData = await performWebSearch(input.query, input.jurisdiction);
 
     // Use top 5 results for speed and relevance
     const relevantResults = searchData.slice(0, 5) || [];
@@ -116,6 +118,7 @@ const deepSearchFlow = ai.defineFlow(
     
     const { output } = await analysisPrompt({
         query: input.query,
+        jurisdiction: input.jurisdiction,
         documentContext: input.documentDataUri,
         searchResults: JSON.stringify(relevantResults, null, 2),
     });

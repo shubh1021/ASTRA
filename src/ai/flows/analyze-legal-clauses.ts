@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -15,6 +16,7 @@ const AnalyzeLegalClausesInputSchema = z.object({
   documentText: z
     .string()
     .describe('The text content of the legal document to analyze.'),
+  jurisdiction: z.string().describe('The legal jurisdiction to consider for the analysis.'),
 });
 export type AnalyzeLegalClausesInput = z.infer<typeof AnalyzeLegalClausesInputSchema>;
 
@@ -43,7 +45,9 @@ const prompt = ai.definePrompt({
   output: {schema: AnalyzeLegalClausesOutputSchema},
   prompt: `You are an AI legal assistant specializing in analyzing legal clauses to identify potential risks or unusual terms.
 
-  Analyze the following legal document and identify potentially risky or unusual clauses. For each clause, determine the risk level (low, medium, or high) and provide a detailed explanation.
+  Your analysis must be tailored to the laws and regulations of the following jurisdiction: {{{jurisdiction}}}.
+
+  Analyze the following legal document and identify potentially risky or unusual clauses. For each clause, determine the risk level (low, medium, or high) and provide a detailed explanation based on the specified jurisdiction.
 
   Document Text: {{{documentText}}}
   `,

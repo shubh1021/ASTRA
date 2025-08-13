@@ -18,12 +18,18 @@ interface Message {
   fileName?: string;
 }
 
+interface Jurisdiction {
+  code: string;
+  name: string;
+}
+
 export default function LegalChatbotPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [jurisdiction, setJurisdiction] = useState<Jurisdiction | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -31,6 +37,11 @@ export default function LegalChatbotPage() {
   const initialLoad = useRef(true);
 
   useEffect(() => {
+    const storedJurisdiction = localStorage.getItem('jurisdiction');
+    if (storedJurisdiction) {
+        setJurisdiction(JSON.parse(storedJurisdiction));
+    }
+
     if (initialLoad.current) {
         const query = localStorage.getItem('chatbotQuery');
         const context = localStorage.getItem('chatbotContext');
@@ -92,6 +103,12 @@ export default function LegalChatbotPage() {
   };
 
   const handleSendMessage = async (currentInput?: string, currentFilePreview?: string) => {
+    if (!jurisdiction) {
+        // This should ideally be handled more gracefully, e.g., with a toast notification
+        console.error("Jurisdiction not set.");
+        return;
+    }
+
     const query = currentInput ?? input;
     const fileDataUri = currentFilePreview ?? filePreview;
 
@@ -120,6 +137,7 @@ export default function LegalChatbotPage() {
         const payload: LegalChatbotInput = {
             query: query,
             history: messages,
+            jurisdiction: jurisdiction.name,
         };
         if(fileDataUri){
             payload.documentDataUri = fileDataUri;
@@ -230,7 +248,7 @@ export default function LegalChatbotPage() {
                 <Button
                     size="icon"
                     onClick={() => handleSendMessage()}
-                    disabled={isLoading || (!input.trim() && !file)}
+                    disabled={isLoading || (!input.trim() && !file) || !jurisdiction}
                 >
                     <Send className="h-5 w-5" />
                 </Button>

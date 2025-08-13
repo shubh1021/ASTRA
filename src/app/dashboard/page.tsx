@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { analyzeLegalClauses, AnalyzeLegalClausesOutput } from '@/ai/flows/analyze-legal-clauses';
 import { legalChatbot } from '@/ai/flows/legal-chatbot';
-import { Loader2, FileCode, Bot, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send } from 'lucide-react';
+import { Loader2, FileCode, Bot, Search, ZoomIn, ZoomOut, RotateCw, Upload, Send, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -18,6 +18,11 @@ import { useRouter } from 'next/navigation';
 interface AssistantMessage {
     role: 'user' | 'assistant';
     content: string;
+}
+
+interface Jurisdiction {
+  code: string;
+  name: string;
 }
 
 export default function DashboardPage() {
@@ -32,7 +37,17 @@ export default function DashboardPage() {
       { role: 'assistant', content: "I'm here to help with questions about your document. Ask me anything!" }
   ]);
   const [activeAccordionItems, setActiveAccordionItems] = useState(["analysis"]);
+  const [jurisdiction, setJurisdiction] = useState<Jurisdiction | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const storedJurisdiction = localStorage.getItem('jurisdiction');
+    if (storedJurisdiction) {
+      setJurisdiction(JSON.parse(storedJurisdiction));
+    } else {
+        router.push('/jurisdiction');
+    }
+  }, [router]);
 
   const [panelsWidth, setPanelsWidth] = useState({ left: 66, right: 34 });
   const [assistantPanelHeight, setAssistantPanelHeight] = useState(40); // Initial height in percentage
@@ -64,7 +79,7 @@ export default function DashboardPage() {
         setError('Unsupported file type. Please upload a .txt file.');
       }
     }
-  }, []);
+  }, [jurisdiction]);
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
@@ -80,12 +95,16 @@ export default function DashboardPage() {
       setError('The document is empty.');
       return;
     }
+    if (!jurisdiction) {
+      setError('Please select a jurisdiction first.');
+      return;
+    }
     setIsLoading(true);
     setError(null);
     setAnalysisResult(null);
 
     try {
-        const analysis = await analyzeLegalClauses({ documentText: text });
+        const analysis = await analyzeLegalClauses({ documentText: text, jurisdiction: jurisdiction.name });
         setAnalysisResult(analysis);
 
     } catch (e) {
@@ -121,7 +140,7 @@ export default function DashboardPage() {
   };
 
   const handleAssistantSend = async () => {
-    if (!assistantQuery.trim() || !documentText.trim()) return;
+    if (!assistantQuery.trim() || !documentText.trim() || !jurisdiction) return;
 
     const newMessages: AssistantMessage[] = [...assistantMessages, { role: 'user', content: assistantQuery }];
     setAssistantMessages(newMessages);
@@ -135,6 +154,7 @@ export default function DashboardPage() {
             query: currentQuery,
             history: newMessages.slice(0, -1),
             documentDataUri: `data:text/plain;base64,${btoa(documentText)}`,
+            jurisdiction: jurisdiction.name,
         });
         setAssistantMessages(prev => [...prev, { role: 'assistant', content: result.response }]);
     } catch(e) {
@@ -362,7 +382,7 @@ export default function DashboardPage() {
                                     size="icon" 
                                     className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                                     onClick={handleAssistantSend}
-                                    disabled={!assistantQuery.trim() || !documentText.trim() || isAssistantLoading}
+                                    disabled={!assistantQuery.trim() || !documentText.trim() || isAssistantLoading || !jurisdiction}
                                 >
                                 <Send className="h-4 w-4" />
                             </Button>

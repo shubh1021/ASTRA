@@ -13,6 +13,11 @@ import Image from 'next/image';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 
+interface Jurisdiction {
+  code: string;
+  name: string;
+}
+
 export default function DeepSearchPage() {
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -20,17 +25,31 @@ export default function DeepSearchPage() {
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [jurisdiction, setJurisdiction] = useState<Jurisdiction | null>(null);
 
   useEffect(() => {
+    const storedJurisdiction = localStorage.getItem('jurisdiction');
+    if (storedJurisdiction) {
+      setJurisdiction(JSON.parse(storedJurisdiction));
+    }
+
     const searchQuery = localStorage.getItem('deepSearchQuery');
     if (searchQuery) {
       setQuery(searchQuery);
-      handleSearch(searchQuery);
+      if (storedJurisdiction) {
+        handleSearch(searchQuery, undefined, JSON.parse(storedJurisdiction));
+      }
       localStorage.removeItem('deepSearchQuery');
     }
   }, []);
 
-  const handleSearch = async (searchQuery?: string, searchFilePreview?: string) => {
+  const handleSearch = async (searchQuery?: string, searchFilePreview?: string, searchJurisdiction?: Jurisdiction) => {
+    const currentJurisdiction = searchJurisdiction || jurisdiction;
+    if (!currentJurisdiction) {
+      setError('Please select a jurisdiction first from the main page.');
+      return;
+    }
+
     const currentQuery = typeof searchQuery === 'string' ? searchQuery : query;
     const currentFile = searchFilePreview || filePreview;
 
@@ -46,6 +65,7 @@ export default function DeepSearchPage() {
     try {
       const result = await deepSearch({
         query: currentQuery.trim() || 'Analyze the provided document.',
+        jurisdiction: currentJurisdiction.name,
         documentDataUri: currentFile || undefined,
       });
       setSearchResult(result);
@@ -66,11 +86,11 @@ export default function DeepSearchPage() {
             const dataUri = reader.result as string;
             setFilePreview(dataUri);
             // Automatically trigger search when file is uploaded
-            handleSearch(query, dataUri); 
+            handleSearch(query, dataUri, jurisdiction); 
         };
         reader.readAsDataURL(uploadedFile);
     }
-  }, [query]); // Re-create onDrop if query changes
+  }, [query, jurisdiction]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
     onDrop,
@@ -85,8 +105,6 @@ export default function DeepSearchPage() {
   const removeFile = () => {
     setFile(null);
     setFilePreview(null);
-    // Optionally clear results when file is removed
-    // setSearchResult(null); 
     setError(null);
   }
 

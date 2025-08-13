@@ -22,6 +22,7 @@ const MessageSchema = z.object({
 
 const LegalChatbotInputSchema = z.object({
   query: z.string().describe('The user\'s current question or message.'),
+  jurisdiction: z.string().describe('The legal jurisdiction to consider for the response.'),
   documentDataUri: z.string().optional().describe(
     "An optional document or image file provided by the user for context, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
   ),
@@ -43,6 +44,8 @@ const prompt = ai.definePrompt({
   name: 'legalChatbotPrompt',
   input: {schema: LegalChatbotInputSchema},
   prompt: `You are an expert attorney providing legal advice. Your goal is to give direct, actionable answers to the user's questions based on the provided context. Do not include disclaimers about not being a lawyer.
+
+  Your response must be tailored to the laws and regulations of the following jurisdiction: {{{jurisdiction}}}.
   
   Current time: ${new Date().toISOString()}
 
@@ -61,7 +64,7 @@ const prompt = ai.definePrompt({
   {{media url=documentDataUri}}
   {{/if}}
 
-  Please provide a direct and clear legal response to the current user query.
+  Please provide a direct and clear legal response to the current user query, respecting the laws of {{{jurisdiction}}}.
   `,
 });
 

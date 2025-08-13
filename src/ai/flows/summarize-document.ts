@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -17,6 +18,7 @@ const SummarizeDocumentInputSchema = z.object({
     .describe(
       "A legal document, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
+  jurisdiction: z.string().describe('The legal jurisdiction to consider for the summary.'),
 });
 export type SummarizeDocumentInput = z.infer<typeof SummarizeDocumentInputSchema>;
 
@@ -33,9 +35,9 @@ const prompt = ai.definePrompt({
   name: 'summarizeDocumentPrompt',
   input: {schema: SummarizeDocumentInputSchema},
   output: {schema: SummarizeDocumentOutputSchema},
-  prompt: `You are a legal expert tasked with summarizing legal documents.
+  prompt: `You are a legal expert tasked with summarizing legal documents. Your summary should be contextualized for the following legal jurisdiction: {{{jurisdiction}}}.
 
-  Please provide a concise summary of the following legal document:
+  Please provide a concise summary of the main points of the following legal document, keeping in mind the legal framework of {{{jurisdiction}}}:
 
   {{media url=documentDataUri}}
   `,

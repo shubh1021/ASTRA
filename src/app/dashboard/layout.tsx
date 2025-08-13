@@ -1,15 +1,20 @@
 
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { File as FileIcon, Search, BrainCircuit, Settings, User, LogOut, Zap } from 'lucide-react';
+import { File as FileIcon, Search, BrainCircuit, Settings, User, LogOut, Zap, Globe, ChevronsLeftRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Logo from '@/components/logo';
+
+interface Jurisdiction {
+  code: string;
+  name: string;
+}
 
 export default function DashboardLayout({
   children,
@@ -19,6 +24,17 @@ export default function DashboardLayout({
   const [sidebarWidth, setSidebarWidth] = useState(256);
   const isResizing = useRef(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const [jurisdiction, setJurisdiction] = useState<Jurisdiction | null>(null);
+
+  useEffect(() => {
+    const storedJurisdiction = localStorage.getItem('jurisdiction');
+    if (storedJurisdiction) {
+      setJurisdiction(JSON.parse(storedJurisdiction));
+    } else {
+        router.push('/jurisdiction');
+    }
+  }, [router]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -81,6 +97,20 @@ export default function DashboardLayout({
           ))}
         </div>
         <div className="mt-auto space-y-2">
+           {jurisdiction && (
+            <Card className="p-3 bg-secondary">
+              <div className="flex items-center gap-3">
+                <Globe className="h-5 w-5 text-muted-foreground" />
+                <div className="flex-1">
+                    <p className="text-xs text-muted-foreground">Jurisdiction</p>
+                    <p className="font-semibold text-sm">{jurisdiction.name}</p>
+                </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.push('/jurisdiction')}>
+                    <ChevronsLeftRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </Card>
+          )}
           <Button variant="ghost" className="w-full justify-start">
             <Settings className="mr-3 h-5 w-5"/>
             Settings

@@ -58,6 +58,10 @@ export default function JurisdictionPage() {
   const router = useRouter();
 
   const handleContinue = () => {
+    if (selectedJurisdiction) {
+      const selected = jurisdictions.find(j => j.code === selectedJurisdiction);
+      localStorage.setItem('jurisdiction', JSON.stringify(selected));
+    }
     router.push('/dashboard');
   };
 
